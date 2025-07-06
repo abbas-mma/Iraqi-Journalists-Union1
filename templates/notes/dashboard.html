@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}لوحة تحكم المستخدم{% endblock %}
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-lg">
+    <h2 class="text-2xl font-bold mb-6 text-center text-blue-900 border-b pb-4">
+        <i class="fas fa-tachometer-alt mr-2"></i> لوحة التحكم
+    </h2>
+
+    <!-- إحصائيات سريعة -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h3 class="font-bold text-blue-800 mb-2">الوثائق النشطة</h3>
+            <p class="text-3xl font-bold text-blue-600">{{ active_notes_count }}</p>
+        </div>
+        
+        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+            <h3 class="font-bold text-green-800 mb-2">الوثائق المنتهية</h3>
+            <p class="text-3xl font-bold text-green-600">{{ expired_notes_count }}</p>
+        </div>
+        
+        <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <h3 class="font-bold text-purple-800 mb-2">إجمالي الوثائق</h3>
+            <p class="text-3xl font-bold text-purple-600">{{ total_notes_count }}</p>
+        </div>
+    </div>
+
+    <!-- أحدث الوثائق -->
+    <div class="mb-8">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
+            <i class="fas fa-file-alt mr-2"></i> أحدث الوثائق
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="py-2 px-4 border-b">العنوان</th>
+                        <th class="py-2 px-4 border-b">النوع</th>
+                        <th class="py-2 px-4 border-b">التاريخ</th>
+                        <th class="py-2 px-4 border-b">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in recent_notes %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-2 px-4 border-b">{{ note.title }}</td>
+                        <td class="py-2 px-4 border-b">{{ note.doc_type }}</td>
+                        <td class="py-2 px-4 border-b">{{ note.created_at|date:'Y-m-d' }}</td>
+                        <td class="py-2 px-4 border-b">
+                            <a href="{% url 'note_detail' note.id %}" class="text-blue-600 hover:underline">عرض</a>
+                            <a href="{% url 'delete_note' note.id %}" class="text-red-600 hover:underline ml-2" onclick="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟');">حذف</a>
+                            <a href="{% url 'archive_note' note.id %}" class="text-yellow-600 hover:underline ml-2">أرشفة</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- نشاط النظام -->
+    <div>
+        <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
+            <i class="fas fa-history mr-2"></i> نشاط النظام
+        </h3>
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            {% for log in system_logs %}
+            <div class="mb-2 pb-2 border-b border-gray-200 last:border-0">
+                <p class="text-sm text-gray-600">{{ log.timestamp|date:'Y-m-d H:i' }}</p>
+                <p>{{ log.message }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

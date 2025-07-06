@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}الوثائق الواردة{% endblock %}
+{% block content %}
+<div class="mt-24 px-6">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-blue-800 flex items-center gap-2">📥 الوثائق الواردة</h2>
+        <a href="{% url 'create_note' %}" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">➕ إضافة وثيقة</a>
+    </div>
+    {% if notes %}
+    <div class="overflow-x-auto rounded-lg shadow-lg border border-gray-200">
+        <table class="min-w-full bg-white divide-y divide-gray-200">
+            <thead class="bg-blue-50">
+                <tr>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-blue-900">العنوان</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-blue-900">المرسل</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-blue-900">تاريخ الإنشاء</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-blue-900">عرض</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+                {% for note in notes %}
+                <tr class="hover:bg-blue-50 transition">
+                    <td class="px-4 py-3 text-sm">{{ note.title }}</td>
+                    <td class="px-4 py-3 text-sm">{{ note.created_by.username }}</td>
+                    <td class="px-4 py-3 text-sm">{{ note.created_at|date:"Y-m-d" }}</td>
+                    <td class="px-4 py-3">
+                        <a href="{% url 'note_detail' note.id %}" class="text-blue-600 hover:underline font-semibold">عرض</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-gray-500 mt-4">لا توجد وثائق واردة حالياً.</p>
+    {% endif %}
+</div>
+{% endblock %}

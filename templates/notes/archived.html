@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}الوثائق المؤرشفة{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 mt-24">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-blue-800 flex items-center gap-2">🗄️ الوثائق المؤرشفة</h2>
+        <a href="{% url 'create_note' %}" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">➕ إضافة وثيقة</a>
+    </div>
+    <div class="mb-4">
+        <button onclick="window.print()" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">📥 تصدير PDF</button>
+    </div>
+    {% if notes %}
+    <div class="overflow-x-auto bg-white rounded-lg shadow-lg border border-blue-200">
+        <table class="w-full table-auto" id="notesTable">
+            <thead class="bg-blue-50">
+                <tr>
+                    <th class="px-4 py-2 text-blue-900 font-semibold">العنوان</th>
+                    <th class="px-4 py-2 text-blue-900 font-semibold">تاريخ الإنشاء</th>
+                    <th class="px-4 py-2 text-blue-900 font-semibold">النوع</th>
+                    <th class="px-4 py-2 text-blue-900 font-semibold">الخيارات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for note in notes %}
+                <tr class="note-row border-b hover:bg-blue-50 transition">
+                    <td class="px-4 py-2 note-title">{{ note.title }}</td>
+                    <td class="px-4 py-2 note-date">{{ note.created_at|date:"Y-m-d" }}</td>
+                    <td class="px-4 py-2 note-type">{{ note.doc_type }}</td>
+                    <td class="px-4 py-2">
+                        <a href="{% url 'note_detail' note.id %}" class="text-blue-600 hover:underline">عرض</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center text-gray-500 py-8">لا توجد وثائق مؤرشفة حالياً</div>
+    {% endif %}
+</div>
+{% endblock %}

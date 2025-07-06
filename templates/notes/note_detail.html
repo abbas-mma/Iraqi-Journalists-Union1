@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}عرض الوثيقة{% endblock %}
+
+{% block content %}
+
+<!-- ✅ الخط العربي -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    body {
+        font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
+    }
+</style>
+
+<div class="bg-white p-10 rounded-lg shadow-md max-w-4xl mx-auto print:p-0 print:shadow-none print:bg-white">
+
+    <!-- ✅ الشعار -->
+    <div class="text-center mb-6 border-b pb-4">
+        <img src="{% static 'logo.png' %}" alt="شعار الاتحاد" class="h-24 mx-auto">
+        <h1 class="text-3xl font-bold text-blue-800 mt-2">اتحاد الصحفيين العراقيين</h1>
+        <p class="text-sm text-gray-500">الوثيقة الرسمية</p>
+    </div>
+
+    <!-- ✅ محتوى الوثيقة -->
+    <div class="mb-6 leading-relaxed">
+        <h2 class="text-xl font-bold mb-2">📌 عنوان الوثيقة:</h2>
+        <p class="text-gray-800">{{ note.title }}</p>
+
+        <h2 class="text-xl font-bold mt-4 mb-2">📄 المحتوى:</h2>
+        <p class="text-gray-700 whitespace-pre-line">{{ note.content }}</p>
+
+        <div class="mt-6 grid grid-cols-2 gap-4 text-sm text-gray-600">
+            <div>📂 نوع الوثيقة: <span class="font-semibold">{{ note.doc_type }}</span></div>
+            <div>👤 أنشئت بواسطة: <span class="font-semibold">{{ note.created_by.username }}</span></div>
+            <div>📅 تاريخ الإنشاء: <span class="font-semibold">{{ note.created_at|date:"Y-m-d" }}</span></div>
+            {% if note.expiry_date %}
+                <div>⏳ تاريخ الانتهاء: <span class="font-semibold">{{ note.expiry_date|date:"Y-m-d" }}</span></div>
+            {% endif %}
+        </div>
+
+        {% if note.attachment %}
+            <div class="mt-4">
+                📎 مرفق: <a href="{{ note.attachment.url }}" class="text-blue-600 underline" target="_blank">عرض الملف</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ✅ أزرار العمليات -->
+{% if user_profile.role == 'admin' or user_profile.role == 'supervisor' or user_profile.role == 'employee' %}
+    <div class="mt-8 flex flex-wrap gap-4 justify-center no-print">
+        <form method="post" action="{% url 'archive_note' note.id %}">
+            {% csrf_token %}
+            <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+                🗂 أرشفة
+            </button>
+        </form>
+
+        <form method="post" action="{% url 'delete_note' note.id %}" onsubmit="return confirm('هل أنت متأكد من حذف الوثيقة؟');">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                🗑 حذف
+            </button>
+        </form>
+
+        <button onclick="window.print()" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">
+            🖨 طباعة
+        </button>
+
+        <a href="{{ note_pdf_url }}" download class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            ⬇ تحميل PDF
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- ✅ الصفحة الثانية للطباعة -->
+    <div class="page-break print:block hidden mt-20 text-center">
+        <h2 class="text-xl font-bold mb-4">📎 رمز التحقق للوثيقة</h2>
+        <img src="data:image/png;base64,{{ img_str }}" alt="QR Code" class="mx-auto h-48">
+        <p class="mt-4 text-gray-600">امسح الـ QR Code لعرض محتوى الوثيقة رقم {{ note.id }}</p>
+
+        {% if security_warning %}
+        <div class="text-red-600 text-sm mt-6 bg-red-50 border border-red-200 p-3 rounded w-full max-w-lg mx-auto">
+            ⚠ {{ security_warning.message }}
+        </div>
+        {% endif %}
+
+        <!-- ✅ توقيع وختم -->
+        <div class="flex justify-between items-center mt-10 print:flex hidden">
+            <div>
+                <p class="font-semibold">التوقيع:</p>
+                <p class="mt-8">....................</p>
+            </div>
+            <div class="text-center">
+                <p class="font-semibold">الختم:</p>
+                <p class="mt-8 text-2xl">🟢⬛️ ختم رسمي</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ تنسيقات الطباعة -->
+<style>
+    @media print {
+        body {
+            background: white;
+            color: black;
+            font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        nav, .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

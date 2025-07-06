@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 14px;
+            color: #000;
+            line-height: 1.8;
+        }
+
+        .container {
+            width: 90%;
+            margin: auto;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .header img {
+            height: 100px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #003366;
+            margin-top: 10px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            color: #444;
+        }
+
+        .info-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .attachment {
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .footer {
+            page-break-before: always;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .qr-code {
+            margin-top: 20px;
+        }
+
+        .warning {
+            color: red;
+            font-size: 13px;
+            margin-top: 20px;
+            border: 1px solid #f00;
+            padding: 10px;
+        }
+
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+        }
+
+        .signatures div {
+            text-align: center;
+        }
+
+        .stamp-sign {
+            margin-top: 40px;
+            font-size: 16px;
+        }
+
+        .small {
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- ✅ الصفحة الأولى -->
+        <div class="header">
+            <img src="{{ STATIC_ROOT }}/logo.png" alt="الشعار">
+            <div class="title">اتحاد الصحفيين العراقيين</div>
+            <div class="small">الوثيقة الرسمية</div>
+        </div>
+
+        <div>
+            <div class="section-title">📌 عنوان الوثيقة:</div>
+            <p>{{ note.title }}</p>
+
+            <div class="section-title">📄 المحتوى:</div>
+            <p>{{ note.content|linebreaksbr }}</p>
+
+            <div class="info-grid">
+                <div>📂 النوع: <strong>{{ note.doc_type }}</strong></div>
+                <div>👤 المستخدم: <strong>{{ note.created_by.username }}</strong></div>
+                <div>📅 الإنشاء: <strong>{{ note.created_at|date:"Y-m-d" }}</strong></div>
+            </div>
+
+            {% if note.expiry_date %}
+            <div class="info-grid">
+                <div>⏳ الانتهاء: <strong>{{ note.expiry_date|date:"Y-m-d" }}</strong></div>
+            </div>
+            {% endif %}
+
+            {% if note.attachment %}
+            <div class="attachment">📎 مرفق: {{ note.attachment.name }}</div>
+            {% endif %}
+        </div>
+
+        <!-- ✅ الصفحة الثانية -->
+        <div class="footer">
+            <h3>📎 رمز التحقق للوثيقة</h3>
+            <div class="qr-code">
+                <img src="data:image/png;base64,{{ img_str }}" alt="QR Code" width="200" height="200">
+            </div>
+            <p class="small">امسح QR Code لعرض محتوى الوثيقة رقم {{ note.id }}</p>
+
+            {% if security_warning %}
+            <div class="warning">
+                ⚠ {{ security_warning.text }}
+            </div>
+            {% endif %}
+
+            <div class="signatures">
+                <div>
+                    <div class="stamp-sign">🖊 التوقيع</div>
+                    <p>....................</p>
+                </div>
+                <div>
+                    <div class="stamp-sign">📍 الختم الرسمي</div>
+                    <p>⬛️🟢</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

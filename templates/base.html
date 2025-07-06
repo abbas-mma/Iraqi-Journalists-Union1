@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}لوحة التحكم{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .dropdown:hover .dropdown-menu { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen transition-colors duration-300" id="bodyRoot">
+    <!-- Navbar -->
+    <nav class="bg-white dark:bg-gray-900 shadow mb-8 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <img src="/static/logo.png.jpg" alt="الشعار" class="h-10 w-auto ml-3 rounded-full shadow-lg">
+                <span class="text-xl font-bold text-blue-900 dark:text-blue-200">نظام إدارة الوثائق</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="toggleDark" class="px-3 py-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" title="تبديل الوضع الليلي">
+                    <i class="fas fa-moon hidden dark:inline"></i>
+                    <i class="fas fa-sun dark:hidden"></i>
+                </button>
+                <div class="relative dropdown">
+                    <button class="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none">
+                        <i class="fas fa-bars ml-2"></i> القائمة
+                    </button>
+                    <div class="dropdown-menu absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded shadow-lg z-50 hidden">
+                        <a href="/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الرئيسية</a>
+                        <a href="{% url 'archived_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">إحصائيات</a>
+                        <a href="{% url 'create_note' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">إنشاء وثيقة</a>
+                        <a href="{% url 'incoming_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الوثائق الواردة</a>
+                        <a href="{% url 'outgoing_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الوثائق الصادرة</a>
+                        <a href="{% url 'archived_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الوثائق المؤرشفة</a>
+                        <a href="{% url 'expired_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الوثائق المنتهية</a>
+                        <a href="{% url 'user_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">وثائقي</a>
+                        <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الملف الشخصي</a>
+                        <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600">تسجيل الخروج</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="max-w-7xl mx-auto px-4 transition-colors duration-300 dark:bg-gray-950 dark:text-gray-100 rounded-xl py-6">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="mt-12 py-4 text-center text-gray-500 dark:text-gray-400">
+        &copy; {{ now|date:'Y' }} اتحاد الصحفيين العراقيين - جميع الحقوق محفوظة
+    </footer>
+    <script>
+        // Dropdown toggle for mobile
+        document.querySelectorAll('.dropdown > button').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var menu = btn.parentElement.querySelector('.dropdown-menu');
+                document.querySelectorAll('.dropdown-menu').forEach(function(m) {
+                    if(m !== menu) m.classList.add('hidden');
+                });
+                menu.classList.toggle('hidden');
+            });
+        });
+        // إغلاق القائمة عند الضغط خارجها
+        document.addEventListener('click', function(e) {
+            document.querySelectorAll('.dropdown-menu').forEach(function(menu) {
+                menu.classList.add('hidden');
+            });
+        });
+        // Dark mode toggle
+        const bodyRoot = document.getElementById('bodyRoot');
+        const toggleDark = document.getElementById('toggleDark');
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+        toggleDark.addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            if(document.documentElement.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>

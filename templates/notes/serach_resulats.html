@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}نتائج البحث{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-4">نتائج البحث عن: "{{ query }}"</h2>
+
+<form method="get" class="bg-white p-4 rounded shadow mb-6 flex flex-col md:flex-row gap-4">
+    <input type="text" name="q" value="{{ query }}" placeholder="كلمة مفتاحية"
+           class="border p-2 rounded w-full md:w-1/3">
+
+    <select name="doc_type" class="border p-2 rounded w-full md:w-1/4">
+        <option value="">كل الأنواع</option>
+        <option value="وارد" {% if doc_type == 'وارد' %}selected{% endif %}>وارد</option>
+        <option value="صادر" {% if doc_type == 'صادر' %}selected{% endif %}>صادر</option>
+        <option value="أمر إداري" {% if doc_type == 'أمر إداري' %}selected{% endif %}>أمر إداري</option>
+    </select>
+
+    <input type="date" name="date_from" value="{{ date_from }}" class="border p-2 rounded w-full md:w-1/5">
+    <input type="date" name="date_to" value="{{ date_to }}" class="border p-2 rounded w-full md:w-1/5">
+
+    <select name="order" class="border p-2 rounded w-full md:w-1/5">
+        <option value="desc" {% if order == 'desc' %}selected{% endif %}>الأحدث أولاً</option>
+        <option value="asc" {% if order == 'asc' %}selected{% endif %}>الأقدم أولاً</option>
+    </select>
+
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">تصفية</button>
+</form>
+
+{% if notes %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {% for note in notes %}
+            <div class="bg-white p-5 rounded shadow border hover:shadow-md transition">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">{{ note.title }}</h3>
+                    <span class="text-sm text-gray-600">{{ note.created_at|date:"Y-m-d H:i" }}</span>
+                </div>
+
+                <p class="text-sm text-gray-700 mt-1">النوع: <span class="font-medium">{{ note.doc_type }}</span></p>
+
+                <p class="mt-1 text-sm">
+                    {% if note.is_archived %}
+                        <span class="text-red-600 font-semibold">مؤرشفة</span>
+                    {% elif note.expiry_date and note.expiry_date < now %}
+                        <span class="text-orange-600 font-semibold">منتهية</span>
+                    {% else %}
+                        <span class="text-green-600 font-semibold">نشطة</span>
+                    {% endif %}
+                </p>
+
+                {% if note.attachment %}
+                    <p class="mt-2">
+                        📎 <a href="{{ note.attachment.url }}" class="text-blue-600 underline" target="_blank">عرض المرفق</a>
+                    </p>
+                {% endif %}
+
+                <div class="mt-3">
+                    <a href="{% url 'note_detail' note.access_token %}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        عرض الوثيقة
+                    </a>
+                </div>
+
+                <div class="mt-4">
+                    <img src="data:image/png;base64,{{ note.qr_code_base64 }}" alt="QR Code" class="w-32 h-32 mx-auto">
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-red-500 font-semibold">لا توجد نتائج مطابقة.</p>
+{% endif %}
+{% endblock %}

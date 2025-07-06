@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>صلاحية غير كافية</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .center { max-width: 500px; margin: 100px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #0001; padding: 40px; text-align: center; }
+        h2 { color: #c0392b; }
+        .back-btn { background: #1976d2; color: #fff; padding: 10px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 18px; border: none; transition: background 0.2s; }
+        .back-btn:hover { background: #1565c0; }
+    </style>
+</head>
+<body>
+    <div class="center">
+        <img src="/static/logo.png.jpg" alt="شعار الاتحاد" style="width: 90px; margin-bottom: 18px; border-radius: 50%; box-shadow: 0 2px 8px #0002; background: #fff; padding: 8px;">
+        <h2>🚫 ليس لديك الصلاحية لإنشاء وثيقة جديدة</h2>
+        <p>
+            عذراً، حسابك الحالي لا يسمح بإنشاء وثائق جديدة.<br>
+            إذا كنت بحاجة لهذه الميزة، يرجى التواصل مع الإدارة أو مشرف النظام لطلب ترقية الصلاحية.<br>
+            <span style="color:#888; font-size:13px; display:block; margin-top:10px;">نوع حسابك الحالي: <b>{{ user_profile.get_role_display }}</b></span>
+        </p>
+        <a href="/" class="back-btn">العودة إلى لوحة التحكم</a>
+    </div>
+</body>
+</html>

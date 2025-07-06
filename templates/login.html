@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تسجيل الدخول - اتحاد الصحفيين العراقيين</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(to right, #2c3e50, #3498db);
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 80px auto;
+            background-color: #ffffff10;
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            max-width: 80px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            text-align: right;
+            margin: 10px 0 5px;
+            color: #fff;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1f618d;
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="{% static 'logo.png' %}" alt="شعار الاتحاد" class="logo">
+        <div class="header-title">اتحاد الصحفيين العراقيين</div>
+        <h2>تسجيل الدخول</h2>
+
+        {% if form.errors %}
+            <p style="color: yellow;">اسم المستخدم أو كلمة المرور غير صحيحة</p>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <label for="username">اسم المستخدم</label>
+            <input type="text" name="username" required>
+
+            <label for="password">كلمة المرور</label>
+            <input type="password" name="password" required>
+
+            <button type="submit">دخول</button>
+        </form>
+        <div style="margin-top: 18px;">
+            <a href="{% url 'password_reset' %}" style="color:#ffd700; text-decoration:underline; font-size:15px;">هل نسيت كلمة المرور؟</a>
+        </div>
+    </div>
+
+</body>
+</html>

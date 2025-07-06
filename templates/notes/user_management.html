@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}إدارة المستخدمين{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-xl font-bold">👥 إدارة المستخدمين</h2>
+  <a href="{% url 'role_change_log' %}" class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700">سجل تغييرات الصلاحيات</a>
+</div>
+{% if messages %}
+  <ul class="mb-4">
+    {% for message in messages %}
+      <li style="color:{% if message.tags == 'error' %}red{% elif message.tags == 'success' %}green{% else %}#555{% endif %};font-weight:bold;">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+<table class="min-w-full divide-y divide-gray-200 bg-white rounded shadow">
+    <thead class="bg-gray-100">
+        <tr>
+            <th class="px-4 py-2">اسم المستخدم</th>
+            <th class="px-4 py-2">البريد الإلكتروني</th>
+            <th class="px-4 py-2">الدور</th>
+            <th class="px-4 py-2">إجراءات</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td class="px-4 py-2">{{ user.username }}</td>
+            <td class="px-4 py-2">{{ user.email }}</td>
+            <td class="px-4 py-2">
+                {% if user != request.user %}
+                    {% include "notes/roles_choices.html" with user=user %}
+                {% else %}
+                    <span class="text-gray-400">{{ user.userprofile.role }}</span>
+                {% endif %}
+            </td>
+            <td class="px-4 py-2">
+                {% if user != request.user %}
+                <form method="post" action="{% url 'delete_user' user.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-600 hover:underline" onclick="return confirm('هل أنت متأكد من حذف هذا المستخدم؟');">حذف</button>
+                </form>
+                {% else %}
+                <span class="text-gray-400">لا يمكن حذف نفسك</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center py-4">لا يوجد مستخدمون</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

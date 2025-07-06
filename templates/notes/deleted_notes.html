@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}الوثائق المحذوفة{% endblock %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4 text-red-600">🗑 الوثائق المحذوفة</h2>
+
+    {% if notes %}
+        <table class="w-full table-auto border-collapse">
+            <thead>
+                <tr class="bg-gray-100 text-right">
+                    <th class="p-2 border">#</th>
+                    <th class="p-2 border">العنوان</th>
+                    <th class="p-2 border">النوع</th>
+                    <th class="p-2 border">تاريخ الإنشاء</th>
+                    <th class="p-2 border">أنشئت بواسطة</th>
+                    <th class="p-2 border">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for note in notes %}
+                <tr class="hover:bg-gray-50 text-sm">
+                    <td class="p-2 border">{{ forloop.counter }}</td>
+                    <td class="p-2 border">{{ note.title }}</td>
+                    <td class="p-2 border">{{ note.doc_type }}</td>
+                    <td class="p-2 border">{{ note.created_at|date:"Y-m-d" }}</td>
+                    <td class="p-2 border">{{ note.created_by.username }}</td>
+                    <td class="p-2 border text-center">
+                        <form method="post" action="{% url 'restore_note' note.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+                                🔁 استرجاع
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-gray-600 mt-6">لا توجد وثائق محذوفة حاليًا.</p>
+    {% endif %}
+</div>
+{% endblock %}
