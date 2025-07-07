@@ -1,33 +1,10 @@
+{% extends 'notes/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>إنشاء وثيقة جديدة</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- الخط العربي الأساسي للطباعة وPDF -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        @font-face {
-            font-family: 'Amiri';
-            src: url('{% static "fonts/Amiri-Regular.ttf" %}');
-        }
-        body {
-            font-family: 'Amiri', 'Cairo', 'Tahoma', sans-serif;
-        }
-        textarea, input, select {
-            font-family: 'Amiri', 'Cairo', 'Tahoma', sans-serif !important;
-        }
-    </style>
-</head>
-<body class="bg-gray-100">
 
-<div class="max-w-3xl mx-auto mt-10 bg-white shadow-lg rounded-xl p-8">
+{% block title %}إنشاء وثيقة جديدة{% endblock %}
 
-    <!-- ✅ الشعار -->
-    <div class="flex justify-center mb-6">
-        <img src="{% static 'logo.png' %}" alt="شعار الاتحاد" class="h-24">
-    </div>
+{% block content %}
+<div class="max-w-3xl mx-auto mt-6 bg-white shadow-lg rounded-xl p-8">
 
     <h2 class="text-3xl font-bold text-center text-blue-800 mb-8">✍️ إنشاء وثيقة جديدة</h2>
 
@@ -95,6 +72,11 @@
         </div>
 
         <div>
+            <label class="block text-sm font-bold text-gray-700">🧑‍💼 إلى (الجهة المستلمة)</label>
+            <input type="text" name="recipient_name" required class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200">
+        </div>
+
+        <div>
             <label class="block text-sm font-bold text-gray-700">🏷 الوسوم (Tags)</label>
             <select name="tags" multiple class="mt-1 block w-full border border-gray-300 rounded-md p-2">
                 {% for tag in tags %}
@@ -117,6 +99,4 @@
         </div>
     </form>
 </div>
-
-</body>
-</html>
+{% endblock %}

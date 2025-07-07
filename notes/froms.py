@@ -20,9 +20,18 @@ class NoteForm(forms.ModelForm):
         help_text='(اختياري) متى تنتهي صلاحية الوثيقة'
     )
 
+    recipient_name = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'اسم الجهة المستلمة',
+            'class': 'form-input'
+        }),
+        label='إلى (الجهة المستلمة)'
+    )
+
     class Meta:
         model = Note
-        fields = ['title', 'content', 'doc_type', 'file', 'stamp', 'signature', 'expiry_date']
+        fields = ['title', 'content', 'doc_type', 'file', 'stamp', 'signature', 'expiry_date', 'recipient_name']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-input'}),
             'content': forms.Textarea(attrs={'class': 'form-textarea'}),

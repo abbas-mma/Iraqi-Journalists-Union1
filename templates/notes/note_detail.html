@@ -33,21 +33,22 @@
         <div class="mt-6 grid grid-cols-2 gap-4 text-sm text-gray-600">
             <div>📂 نوع الوثيقة: <span class="font-semibold">{{ note.doc_type }}</span></div>
             <div>👤 أنشئت بواسطة: <span class="font-semibold">{{ note.created_by.username }}</span></div>
+            <div>🧑‍💼 إلى: <span class="font-semibold">{{ note.recipient_name }}</span></div>
             <div>📅 تاريخ الإنشاء: <span class="font-semibold">{{ note.created_at|date:"Y-m-d" }}</span></div>
             {% if note.expiry_date %}
-                <div>⏳ تاريخ الانتهاء: <span class="font-semibold">{{ note.expiry_date|date:"Y-m-d" }}</span></div>
+            <div>⏳ تاريخ الانتهاء: <span class="font-semibold">{{ note.expiry_date|date:"Y-m-d" }}</span></div>
             {% endif %}
         </div>
 
-        {% if note.attachment %}
-            <div class="mt-4">
-                📎 مرفق: <a href="{{ note.attachment.url }}" class="text-blue-600 underline" target="_blank">عرض الملف</a>
-            </div>
+        {% if note.file %}
+        <div class="mt-4">
+            📎 مرفق: <a href="{{ note.file.url }}" class="text-blue-600 underline" target="_blank">عرض الملف (PDF)</a>
+        </div>
         {% endif %}
     </div>
 
     <!-- ✅ أزرار العمليات -->
-{% if user_profile.role == 'admin' or user_profile.role == 'supervisor' or user_profile.role == 'employee' %}
+    {% if user_profile.role == 'admin' or user_profile.role == 'supervisor' or user_profile.role == 'employee' %}
     <div class="mt-8 flex flex-wrap gap-4 justify-center no-print">
         <form method="post" action="{% url 'archive_note' note.id %}">
             {% csrf_token %}
@@ -56,7 +57,8 @@
             </button>
         </form>
 
-        <form method="post" action="{% url 'delete_note' note.id %}" onsubmit="return confirm('هل أنت متأكد من حذف الوثيقة؟');">
+        <form method="post" action="{% url 'delete_note' note.id %}"
+            onsubmit="return confirm('هل أنت متأكد من حذف الوثيقة؟');">
             {% csrf_token %}
             <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
                 🗑 حذف
@@ -107,10 +109,13 @@
             color: black;
             font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
         }
+
         .page-break {
             page-break-before: always;
         }
-        nav, .no-print {
+
+        nav,
+        .no-print {
             display: none !important;
         }
     }

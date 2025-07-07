@@ -1,4 +1,6 @@
 # لوحة إحصائيات وتقارير
+from django.shortcuts import render, redirect
+from django.conf import settings  # type: ignore
 from django.db.models import Count
 from django.contrib.auth.decorators import user_passes_test
 @user_passes_test(lambda u: u.is_superuser or u.userprofile.role in ['admin', 'supervisor'])
@@ -205,7 +207,7 @@ def create_note(request):
     if user_profile.role not in ['admin', 'supervisor', 'employee']:
         # تسجيل محاولة وصول غير مصرح بها
         from django.core.mail import send_mail
-        from django.conf import settings
+
         send_mail(
             subject="محاولة إنشاء وثيقة بدون صلاحية",
             message=f"المستخدم: {request.user.username} ({request.user.email})\nنوع الحساب: {user_profile.get_role_display()}\nتاريخ ووقت المحاولة: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}",
@@ -215,6 +217,7 @@ def create_note(request):
         )
         return render(request, 'notes/no_permission.html', {'user_profile': user_profile})
 
+
     if request.method == 'POST':
         title = request.POST.get('title')
         content = request.POST.get('content')
@@ -222,6 +225,7 @@ def create_note(request):
         direction = request.POST.get('direction')
         expiry_date = request.POST.get('expiry_date') or None
         issuer_name = request.POST.get('issuer_name')
+        recipient_name = request.POST.get('recipient_name')
         attachment = request.FILES.get('attachment')
         tag_ids = request.POST.getlist('tags')
         token = uuid.uuid4()
@@ -233,6 +237,7 @@ def create_note(request):
             direction=direction,
             expiry_date=expiry_date,
             issuer_name=issuer_name,
+            recipient_name=recipient_name,
             created_by=request.user,
             access_token=token,
             file=attachment
@@ -397,9 +402,21 @@ def no_permission(request):
     return render(request, 'notes/no_permission.html')
 
 
-# ✅ الوصول السريع للوثيقة عبر QR
-@login_required
+
+# ✅ الوصول السريع للوثيقة عبر QR: يعرض مباشرة ملف PDF المرفق إذا وجد
+from django.http import FileResponse, Http404
+import mimetypes
+
 def qr_note_access(request, token):
+    note = get_object_or_404(Note, access_token=token)
+    if note.file:
+        file_path = note.file.path
+        file_mimetype, _ = mimetypes.guess_type(file_path)
+        try:
+            return FileResponse(open(file_path, 'rb'), content_type=file_mimetype or 'application/pdf')
+        except Exception:
+            raise Http404("الملف غير موجود")
+    # إذا لا يوجد ملف مرفق، يعرض صفحة التفاصيل
     return note_detail(request, token)
 
 
