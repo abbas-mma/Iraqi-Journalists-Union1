@@ -1,207 +1,130 @@
-<!-- لوحة تحكم المستخدم - home.html -->
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+{% extends 'notes/base.html' %}
+{% load static %}
+{% block content %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم المستخدم</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .dropdown:hover .dropdown-menu {
-            display: block;
-        }
-    </style>
-</head>
+<!-- عنوان الصفحة -->
+<h2 class="text-3xl font-bold text-center mb-6 text-blue-800">📊 لوحة التحكم الرئيسية</h2>
 
-<body class="bg-gray-100 min-h-screen transition-colors duration-300" id="bodyRoot">
+<!-- أزرار الإدارة -->
+<div class="flex flex-wrap justify-center gap-3 mb-6">
+    <a href="{% url 'user_management' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">➕ إضافة مستخدم</a>
+    <a href="{% url 'user_management' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">👥 عرض/حذف المستخدمين</a>
+    <a href="{% url 'role_change_log' %}" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">🔁 سجل الصلاحيات</a>
+    <a href="{% url 'login_history' %}" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">🕵️ سجل الدخول</a>
+</div>
 
-    <!-- الشريط العلوي -->
-    {% include "notes/base.html" %}
+<!-- بطاقات الإحصائيات -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+    <div class="bg-yellow-300 p-4 rounded shadow">
+        <h4 class="font-bold text-lg flex items-center gap-1">🔔 إشعارات</h4>
+        <ul class="mt-2 list-disc list-inside text-sm">
+            <li>راجع الوثائق المنتهية</li>
+            <li>تأكد من تحديث بيانات المستخدمين</li>
+        </ul>
+    </div>
 
-    <div class="pt-24 px-6 max-w-7xl mx-auto">
+    <div class="bg-purple-100 p-4 rounded shadow text-center">
+        <h4 class="text-lg font-bold">عدد المستخدمين</h4>
+        <p class="text-2xl mt-2">{{ stats.users }}</p>
+    </div>
 
-        <!-- الرسم البياني -->
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 mb-10 flex flex-col items-center">
-            <h3 class="text-lg font-bold text-blue-800 dark:text-blue-200 mb-4"><i class="fas fa-chart-pie"></i> توزيع
-                الوثائق</h3>
-            <canvas id="statsPie" width="320" height="180"></canvas>
-        </div>
+    <div class="bg-green-100 p-4 rounded shadow text-center">
+        <h4 class="text-lg font-bold">الوثائق النشطة</h4>
+        <p class="text-2xl mt-2">{{ stats.active }}</p>
+    </div>
 
-        <!-- آخر التغييرات -->
-        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 mb-10">
-            <h3 class="text-lg font-bold text-blue-800 dark:text-blue-200 mb-4"><i class="fas fa-history"></i> آخر
-                تغييرات الصلاحيات</h3>
-            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-                <li class="py-2 text-gray-400">لا توجد تغييرات حديثة.</li>
-            </ul>
-        </div>
+    <div class="bg-yellow-100 p-4 rounded shadow text-center">
+        <h4 class="text-lg font-bold">الوثائق المنتهية</h4>
+        <p class="text-2xl mt-2">{{ stats.expired }}</p>
+    </div>
 
-        <!-- روابط خارجية -->
-        <div class="flex flex-wrap gap-4 mb-10 justify-center">
-            <a href="https://docs.djangoproject.com/" target="_blank"
-                class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 shadow flex items-center gap-2"><i
-                    class="fas fa-book"></i> توثيق Django</a>
-            <a href="https://fontawesome.com/icons" target="_blank"
-                class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 shadow flex items-center gap-2"><i
-                    class="fas fa-icons"></i> أيقونات إضافية</a>
-            <a href="mailto:support@yourdomain.com"
-                class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 shadow flex items-center gap-2"><i
-                    class="fas fa-envelope"></i> الدعم الفني</a>
-        </div>
+    <div class="bg-blue-100 p-4 rounded shadow text-center">
+        <h4 class="text-lg font-bold">الوثائق المؤرشفة</h4>
+        <p class="text-2xl mt-2">{{ stats.archived }}</p>
+    </div>
+</div>
 
-        <h1 class="text-3xl font-extrabold text-blue-800 dark:text-blue-300 mb-8 text-center drop-shadow-lg">📊 لوحة
-            التحكم الرئيسية</h1>
+<!-- بحث متقدم -->
+<form method="get" class="bg-white p-4 rounded shadow mb-6 flex flex-wrap items-center gap-3">
+    <input type="text" name="q" placeholder="بحث بالعنوان..." value="{{ request.GET.q }}" class="border p-2 rounded flex-1" />
+    <select name="doc_type" class="border p-2 rounded">
+        <option value="">كل الأنواع</option>
+        <option value="official" {% if request.GET.doc_type == 'official' %}selected{% endif %}>رسمي</option>
+        <option value="internal" {% if request.GET.doc_type == 'internal' %}selected{% endif %}>داخلي</option>
+        <option value="urgent" {% if request.GET.doc_type == 'urgent' %}selected{% endif %}>عاجل</option>
+    </select>
+    <input type="date" name="created_at" value="{{ request.GET.created_at }}" class="border p-2 rounded" />
+    <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-black">بحث متقدم</button>
+</form>
 
-        <!-- إدارة المستخدمين -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-7 mb-10">
-            <h2 class="text-xl font-bold mb-4 text-blue-900 dark:text-blue-200">👥 إدارة المستخدمين</h2>
-            <div class="flex flex-wrap gap-2">
-                <a href="/register/"
-                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">إضافة مستخدم جديد</a>
-                <a href="/user-management/"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow">عرض/حذف المستخدمين</a>
-                <a href="/role-change-log/"
-                    class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 shadow">سجل تغييرات
-                    الصلاحيات</a>
-                <a href="/login-history/"
-                    class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-900 shadow">سجل دخول المستخدمين</a>
-            </div>
-        </div>
+<!-- زر إنشاء وثيقة -->
+<div class="text-right mb-4">
+    <a href="{% url 'create_note' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">➕ إنشاء وثيقة جديدة</a>
+</div>
 
-        <!-- إحصائيات -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-10">
-            <a href="/archived/" class="bg-blue-200 p-6 rounded-2xl text-center shadow hover:scale-105 transition">
-                <div class="text-2xl font-bold text-blue-900">0</div>
-                <div>الوثائق المؤرشفة</div>
-            </a>
-            <a href="/expired/" class="bg-yellow-200 p-6 rounded-2xl text-center shadow hover:scale-105 transition">
-                <div class="text-2xl font-bold text-red-700">0</div>
-                <div>الوثائق المنتهية</div>
-            </a>
-            <a href="/my-notes/" class="bg-green-200 p-6 rounded-2xl text-center shadow hover:scale-105 transition">
-                <div class="text-2xl font-bold text-green-700">0</div>
-                <div>الوثائق النشطة</div>
-            </a>
-            <a href="/profile/" class="bg-purple-200 p-6 rounded-2xl text-center shadow hover:scale-105 transition">
-                <div class="text-2xl font-bold text-purple-700">3</div>
-                <div>عدد المستخدمين</div>
-            </a>
-            <div class="bg-yellow-300 p-6 rounded-2xl text-center shadow">
-                <div class="text-2xl"><i class="fas fa-bell"></i></div>
-                <div>إشعارات</div>
-                <ul class="mt-2 text-sm list-disc text-right pr-4">
-                    <li>تنبيه: راجع الوثائق المنتهية</li>
-                    <li>تأكد من تحديث بيانات المستخدمين</li>
-                </ul>
-            </div>
-        </div>
+<!-- جدول الوثائق -->
+<div class="overflow-x-auto bg-white rounded shadow">
+    <table class="min-w-full text-sm text-right">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-4 py-2">العنوان</th>
+                <th class="px-4 py-2">النوع</th>
+                <th class="px-4 py-2">الحالة</th>
+                <th class="px-4 py-2">تاريخ الإنشاء</th>
+                <th class="px-4 py-2">عرض</th>
+                {% if user_profile.role in 'admin supervisor' %}
+                <th class="px-4 py-2">أرشفة</th>
+                <th class="px-4 py-2">حذف</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for note in notes %}
+            <tr class="border-t hover:bg-gray-50">
+                <td class="px-4 py-2">{{ note.title }}</td>
+                <td class="px-4 py-2">{{ note.get_doc_type_display }}</td>
+                <td class="px-4 py-2">
+                    {% if note.is_archived %} مؤرشفة
+                    {% elif note.expiry_date and note.expiry_date < now %} منتهية
+                    {% else %} نشطة
+                    {% endif %}
+                </td>
+                <td class="px-4 py-2">{{ note.created_at|date:"Y-m-d" }}</td>
+                <td class="px-4 py-2">
+                    <a href="{% url 'note_detail' note.access_token %}" class="text-blue-600 hover:underline">عرض</a>
+                </td>
+                {% if user_profile.role in 'admin supervisor' %}
+                <td class="px-4 py-2">
+                    <a href="{% url 'archive_note' note.id %}" class="text-yellow-600 hover:underline">أرشفة</a>
+                </td>
+                <td class="px-4 py-2">
+                    <a href="{% url 'delete_note' note.id %}" class="text-red-600 hover:underline">حذف</a>
+                </td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center text-gray-400 py-4">لا توجد وثائق</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-        <!-- بحث متقدم -->
-        <form method="get"
-            class="mb-10 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col md:flex-row gap-4 items-center justify-between">
-            <a href="/create_note/" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow">➕ إنشاء
-                وثيقة جديدة</a>
-            <input type="text" name="q" id="searchInput" placeholder="بحث بالعنوان..."
-                class="border rounded-lg px-3 py-2 w-full md:w-64 dark:bg-gray-900 dark:text-gray-100">
-            <select name="doc_type" class="border rounded-lg px-3 py-2 dark:bg-gray-900 dark:text-gray-100">
-                <option value="">كل الأنواع</option>
-                <option value="administrative">أمر إداري</option>
-                <option value="official">كتاب رسمي</option>
-                <option value="circular">تعميم</option>
-            </select>
-            <input type="date" name="created_at"
-                class="border rounded-lg px-3 py-2 dark:bg-gray-900 dark:text-gray-100">
-            <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 shadow">بحث
-                متقدم</button>
-        </form>
+<!-- توزيع الوثائق -->
+<div class="mt-10 text-center">
+    <h3 class="text-lg font-bold text-blue-800 mb-2">📈 توزيع الوثائق</h3>
+    <div class="flex justify-center space-x-4 rtl:space-x-reverse">
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-green-400 rounded-full"></div><span>النشطة</span></div>
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-blue-400 rounded-full"></div><span>المؤرشفة</span></div>
+        <div class="flex items-center gap-1"><div class="w-4 h-4 bg-yellow-400 rounded-full"></div><span>المنتهية</span></div>
+    </div>
+</div>
 
-        <!-- جدول الوثائق -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-100 dark:bg-gray-900">
-                    <tr>
-                        <th class="text-right px-4 py-2">العنوان</th>
-                        <th class="text-right px-4 py-2">النوع</th>
-                        <th class="text-right px-4 py-2">الحالة</th>
-                        <th class="text-right px-4 py-2">تاريخ الإنشاء</th>
-                        <th class="text-right px-4 py-2">عرض</th>
-                        <th class="text-right px-4 py-2">أرشفة</th>
-                        <th class="text-right px-4 py-2">حذف</th>
-                    </tr>
-                </thead>
-                <tbody id="notesTable">
-                    <tr>
-                        <td colspan="7" class="text-center py-4 text-gray-500 dark:text-gray-400">لا توجد وثائق</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        {% endblock %}
+<!-- آخر تغييرات الصلاحيات -->
+<div class="mt-8 bg-white p-4 rounded shadow">
+    <h4 class="text-lg font-bold text-blue-700 mb-2">🛠️ آخر تغييرات الصلاحيات</h4>
+    <p class="text-gray-500">لا توجد تغييرات حديثة.</p>
+</div>
 
-        <!-- سكربتات -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script>
-            const ctx = document.getElementById('statsPie').getContext('2d');
-            const statsPie = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['النشطة', 'المؤرشفة', 'المنتهية'],
-                    datasets: [{
-                        data: [0, 0, 0],
-                        backgroundColor: ['#22c55e', '#3b82f6', '#facc15'],
-                    }]
-                },
-                options: {
-                    responsive: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            });
-
-            const searchInput = document.getElementById('searchInput');
-            const notesTable = document.getElementById('notesTable');
-            if (searchInput && notesTable) {
-                searchInput.addEventListener('keyup', function () {
-                    const filter = searchInput.value.toLowerCase();
-                    Array.from(notesTable.rows).forEach(row => {
-                        const text = row.textContent.toLowerCase();
-                        row.style.display = text.includes(filter) ? '' : 'none';
-                    });
-                });
-            }
-
-            document.querySelectorAll('.dropdown > button').forEach(function (btn) {
-                btn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    var menu = btn.parentElement.querySelector('.dropdown-menu');
-                    document.querySelectorAll('.dropdown-menu').forEach(function (m) {
-                        if (m !== menu) m.classList.add('hidden');
-                    });
-                    menu.classList.toggle('hidden');
-                });
-            });
-            document.addEventListener('click', function (e) {
-                document.querySelectorAll('.dropdown-menu').forEach(function (menu) {
-                    menu.classList.add('hidden');
-                });
-            });
-            const toggleDark = document.getElementById('toggleDark');
-            if (localStorage.getItem('theme') === 'dark') {
-                document.documentElement.classList.add('dark');
-            }
-            toggleDark.addEventListener('click', function () {
-                document.documentElement.classList.toggle('dark');
-                if (document.documentElement.classList.contains('dark')) {
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    localStorage.setItem('theme', 'light');
-                }
-            });
-        </script>
-
-</body>
-
-</html>
+{% endblock %}
