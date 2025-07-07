@@ -79,7 +79,11 @@
     <div class="page-break print:block hidden mt-20 text-center">
         <h2 class="text-xl font-bold mb-4">📎 رمز التحقق للوثيقة</h2>
         <img src="data:image/png;base64,{{ img_str }}" alt="QR Code" class="mx-auto h-48">
-        <p class="mt-4 text-gray-600">امسح الـ QR Code لعرض محتوى الوثيقة رقم {{ note.id }}</p>
+        {% if attachment_url %}
+        <p class="mt-4 text-gray-600">امسح الـ QR Code لعرض الملف المرفق مباشرة</p>
+        {% else %}
+        <p class="mt-4 text-gray-600">امسح الـ QR Code لعرض هذه الصفحة</p>
+        {% endif %}
 
         {% if security_warning %}
         <div class="text-red-600 text-sm mt-6 bg-red-50 border border-red-200 p-3 rounded w-full max-w-lg mx-auto">

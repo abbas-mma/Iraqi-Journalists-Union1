@@ -180,9 +180,14 @@ def note_detail(request, token):
         (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
         return render(request, 'notes/no_permission.html')
 
-    note_url = request.build_absolute_uri()
-    # توليد رابط QR (بدون ref=qr)
-    qr = qrcode.make(note_url)
+    # إذا كان هناك ملف مرفق، استخدم رابطه في QR
+    if note.file:
+        qr_data = request.build_absolute_uri(note.file.url)
+        attachment_url = qr_data
+    else:
+        qr_data = request.build_absolute_uri()
+        attachment_url = ''
+    qr = qrcode.make(qr_data)
     buffer = BytesIO()
     qr.save(buffer, format='PNG')
     qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
@@ -196,6 +201,7 @@ def note_detail(request, token):
         'img_str': qr_code_base64,
         'security_warning': SecurityWarning.objects.first(),
         'note_pdf_url': note_pdf_url,
+        'attachment_url': attachment_url,
     })
 
 
