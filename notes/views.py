@@ -583,3 +583,42 @@ def change_user_role(request, user_id):
             send_notification_email(subject, message, [user.email])
         messages.success(request, f"تم تغيير صلاحية المستخدم {user.username} من {dict(UserProfile.ROLE_CHOICES).get(old_role, old_role)} إلى {dict(UserProfile.ROLE_CHOICES).get(new_role, new_role)}.")
     return redirect('user_management')
+
+
+@login_required
+def note_official_pdf(request, token):
+    note = get_object_or_404(Note, access_token=token)
+    user_profile = get_user_profile(request)
+
+    if user_profile.role not in ['admin', 'supervisor', 'employee']:
+        return render(request, 'notes/no_permission.html')
+
+    qr_data = request.build_absolute_uri(note.file.url if note.file else request.path)
+    qr = qrcode.make(qr_data)
+    buffer = BytesIO()
+    qr.save(buffer, format='PNG')
+    img_str = base64.b64encode(buffer.getvalue()).decode()
+
+    font_path = "file://" + os.path.abspath(
+        os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Amiri-Regular.ttf')
+    ).replace("\\", "/")
+
+    html = render_to_string('notes/note_official_pdf.html', {
+        'note': note,
+        'img_str': img_str,
+        'logo_url': request.build_absolute_uri('/static/images/logo.png'),
+        'font_path': font_path,
+    })
+
+    pdf_filename = f"{note.title.replace(' ', '_')}_{note.access_token}_official.pdf"
+    pdf_dir = os.path.join(settings.MEDIA_ROOT, 'generated_pdfs')
+    os.makedirs(pdf_dir, exist_ok=True)
+    pdf_path = os.path.join(pdf_dir, pdf_filename)
+
+    try:
+        HTML(string=html, base_url=request.build_absolute_uri('/')).write_pdf(pdf_path)
+    except Exception as e:
+        print("PDF Generation Error:", e)
+        return HttpResponse("خطأ في توليد ملف PDF", status=500)
+
+    return redirect(f"{settings.MEDIA_URL}generated_pdfs/{pdf_filename}")

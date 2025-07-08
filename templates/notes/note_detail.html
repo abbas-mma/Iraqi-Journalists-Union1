@@ -1,169 +1,147 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}عرض الوثيقة{% endblock %}
+{% block title %}إنشاء وثيقة جديدة{% endblock %}
 
 {% block content %}
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <style>
     body {
-        font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
+        font-family: 'Cairo', 'Tahoma', sans-serif;
+        background: #f9f9f9;
     }
 
-    .bordered-box {
-        border: 2px solid #222;
+    .doc-container {
+        max-width: 800px;
+        margin: 40px auto;
+        background: white;
+        border: 2px solid #333;
         border-radius: 12px;
-        padding: 24px 32px;
-        margin-bottom: 24px;
-        background: #fff;
-        position: relative;
+        padding: 30px 40px;
     }
 
-    .iraq-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-
-    .iraq-header .gov {
-        font-size: 1.1em;
-        font-weight: bold;
-        color: #222;
-    }
-
-    .iraq-header .logo {
-        height: 60px;
-    }
-
-    .iraq-header .date-box {
-        text-align: left;
-        font-size: 0.95em;
-        color: #444;
-    }
-
-    .doc-title {
-        font-size: 1.5em;
-        font-weight: bold;
+    .header {
         text-align: center;
-        margin: 18px 0 10px 0;
+        margin-bottom: 25px;
+    }
+
+    .header img {
+        width: 90px;
+        margin-bottom: 8px;
+    }
+
+    .header h2 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    .header p {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        font-weight: bold;
         color: #1a237e;
+        display: block;
+        margin-bottom: 5px;
     }
 
-    .doc-info {
-        margin-bottom: 18px;
-        font-size: 1.1em;
-        color: #333;
-    }
-
-    .doc-content {
-        margin-bottom: 18px;
-        font-size: 1.1em;
-        color: #222;
-        white-space: pre-line;
-    }
-
-    .qr-section {
-        text-align: center;
-        margin: 32px 0 12px 0;
-    }
-
-    .qr-section img {
-        height: 180px;
-        margin-bottom: 8px;
-    }
-
-<<<<<<< HEAD
-    <!-- ✅ الصفحة الثانية للطباعة -->
-    <div class="page-break print:block hidden mt-20 text-center">
-        <h2 class="text-xl font-bold mb-4">📎 رمز التحقق للوثيقة</h2>
-        <img src="data:image/png;base64,{{ img_str }}" alt="QR Code" class="mx-auto h-48">
-        {% if attachment_url %}
-        <p class="mt-4 text-gray-600">امسح الـ QR Code لعرض الملف المرفق مباشرة</p>
-        {% else %}
-        <p class="mt-4 text-gray-600">امسح الـ QR Code لعرض هذه الصفحة</p>
-        {% endif %}
-=======
-    .serial {
-        text-align: center;
-        font-size: 1.1em;
-        color: #444;
-        margin-bottom: 8px;
-    }
->>>>>>> 2384933 (تحديث الملفات وتحسين التصميم)
-
-    .official-footer {
-        margin-top: 32px;
-        color: #444;
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
         font-size: 15px;
+    }
+
+    .btn-submit {
+        background: #1a237e;
+        color: white;
+        padding: 10px 25px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .btn-submit:hover {
+        background: #3949ab;
+    }
+
+    .footer {
         text-align: center;
+        font-size: 13px;
+        color: #555;
+        margin-top: 40px;
     }
 
     @media print {
-        body {
-            background: white;
-            color: black;
-            font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
-        }
-
         .no-print {
-            display: none !important;
+            display: none;
         }
 
-        .bordered-box {
-            box-shadow: none !important;
-            border: 2px solid #222 !important;
+        .doc-container {
+            border: 2px solid black !important;
         }
     }
 </style>
 
-<div class="bordered-box max-w-3xl mx-auto">
-    <div class="iraq-header">
-        <div class="gov">
-            جمهورية العراق<br>
-            وزارة العدل - دائرة الكتاب العدول - الباب
+<div class="doc-container">
+    <!-- رأس الصفحة -->
+    <div class="header">
+        <img src="{% static 'images/logo.png' %}" alt="شعار الاتحاد">
+        <h2>اتحاد الصحفيين العراقيين</h2>
+        <p>المقر العام</p>
+    </div>
+
+    <!-- نموذج إنشاء الوثيقة -->
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="title">عنوان الوثيقة</label>
+            <input type="text" name="title" id="title" required>
         </div>
-        <img src="{% static 'logo.png' %}" alt="شعار العراق" class="logo">
-        <div class="date-box">
-            التاريخ: {{ note.created_at|date:"Y-m-d" }}<br>
-            رقم الوثيقة: {{ note.id }}
+
+        <div class="form-group">
+            <label for="file">تحميل الملف (PDF أو صورة)</label>
+            <input type="file" name="file" id="file" accept=".pdf,.png,.jpg,.jpeg" required>
         </div>
-    </div>
-    <div class="doc-title">{{ note.title }}</div>
-    <div class="doc-info">
-        <b>نوع الوثيقة:</b> {{ note.get_doc_type_display }}<br>
-        <b>الجهة المصدرة:</b> {{ note.issuer_name }}<br>
-        <b>الجهة المستلمة:</b> {{ note.recipient_name }}<br>
-        <b>أنشئت بواسطة:</b> {{ note.created_by.username }}<br>
-        {% if note.expiry_date %}<b>تاريخ الانتهاء:</b> {{ note.expiry_date|date:"Y-m-d" }}<br>{% endif %}
-    </div>
-    <div class="doc-content">{{ note.content }}</div>
-    {% if note.file %}
-    <div class="doc-info">
-        <b>📎 مرفق:</b> <a href="{{ note.file.url }}" class="text-blue-600 underline" target="_blank">عرض الملف
-            (PDF)</a>
-    </div>
-    {% endif %}
-    <div class="qr-section">
-        <img src="data:image/png;base64,{{ img_str }}" alt="QR Code">
-        <div class="serial">رقم التحقق: {{ note.access_token }}</div>
-        <div class="text-gray-600 text-sm mt-2">
-            {% if note.file %}
-            امسح الـ QR Code لعرض الملف المرفق مباشرة
-            {% else %}
-            امسح الـ QR Code لعرض هذه الصفحة
-            {% endif %}
+
+        <div class="form-group">
+            <label for="expiry_date">تاريخ الانتهاء (اختياري)</label>
+            <input type="date" name="expiry_date" id="expiry_date">
         </div>
-    </div>
-    {% if security_warning %}
-    <div class="text-red-600 text-sm mt-6 bg-red-50 border border-red-200 p-3 rounded w-full max-w-lg mx-auto">
-        ⚠ {{ security_warning.message }}
-    </div>
-    {% endif %}
-    <div class="official-footer">
-        هذه الوثيقة صادرة إلكترونياً من اتحاد الصحفيين العراقيين ولا تحتاج توقيعاً أو ختم ورقي.<br>
-        يمكنك حفظ صورة الوثيقة في هاتفك واستخدامها عند الحاجة.<br>
-        تؤيد صحة صدور الوثيقة الإلكترونية بعد مطابقتها مع الوثيقة الورقية.
+
+        <div class="form-group">
+            <label for="note_type">نوع الوثيقة</label>
+            <select name="note_type" id="note_type" required>
+                <option value="رسمي">رسمي</option>
+                <option value="أمر إداري">أمر إداري</option>
+                <option value="تعميم">تعميم</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="tags">الوسوم (افصل بين كل وسم بفاصلة)</label>
+            <input type="text" name="tags" id="tags">
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn-submit">📄 إنشاء الوثيقة</button>
+        </div>
+    </form>
+
+    <div class="footer">
+        سيتم توليد رمز QR تلقائيًا وربطه بالمرفق بعد إنشاء الوثيقة.
     </div>
 </div>
 {% endblock %}

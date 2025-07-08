@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('note/<uuid:token>/', views.note_detail, name='note_detail'),
     path('note/<uuid:token>/qr_only/', views.note_qr_only, name='note_qr_only'),
+    path('note/<uuid:token>/official-pdf/', views.note_official_pdf, name='note_official_pdf'),
     path('qr/<uuid:token>/', views.qr_note_access, name='qr_note_access'),
     path('register/', views.register, name='register'),
     path('no_permission/', views.no_permission, name='no_permission'),
