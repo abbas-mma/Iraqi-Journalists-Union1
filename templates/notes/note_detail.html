@@ -4,77 +4,76 @@
 {% block title %}عرض الوثيقة{% endblock %}
 
 {% block content %}
-
-<!-- ✅ الخط العربي -->
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <style>
     body {
         font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
     }
-</style>
 
-<div class="bg-white p-10 rounded-lg shadow-md max-w-4xl mx-auto print:p-0 print:shadow-none print:bg-white">
+    .bordered-box {
+        border: 2px solid #222;
+        border-radius: 12px;
+        padding: 24px 32px;
+        margin-bottom: 24px;
+        background: #fff;
+        position: relative;
+    }
 
-    <!-- ✅ الشعار -->
-    <div class="text-center mb-6 border-b pb-4">
-        <img src="{% static 'logo.png' %}" alt="شعار الاتحاد" class="h-24 mx-auto">
-        <h1 class="text-3xl font-bold text-blue-800 mt-2">اتحاد الصحفيين العراقيين</h1>
-        <p class="text-sm text-gray-500">الوثيقة الرسمية</p>
-    </div>
+    .iraq-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
 
-    <!-- ✅ محتوى الوثيقة -->
-    <div class="mb-6 leading-relaxed">
-        <h2 class="text-xl font-bold mb-2">📌 عنوان الوثيقة:</h2>
-        <p class="text-gray-800">{{ note.title }}</p>
+    .iraq-header .gov {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #222;
+    }
 
-        <h2 class="text-xl font-bold mt-4 mb-2">📄 المحتوى:</h2>
-        <p class="text-gray-700 whitespace-pre-line">{{ note.content }}</p>
+    .iraq-header .logo {
+        height: 60px;
+    }
 
-        <div class="mt-6 grid grid-cols-2 gap-4 text-sm text-gray-600">
-            <div>📂 نوع الوثيقة: <span class="font-semibold">{{ note.doc_type }}</span></div>
-            <div>👤 أنشئت بواسطة: <span class="font-semibold">{{ note.created_by.username }}</span></div>
-            <div>🧑‍💼 إلى: <span class="font-semibold">{{ note.recipient_name }}</span></div>
-            <div>📅 تاريخ الإنشاء: <span class="font-semibold">{{ note.created_at|date:"Y-m-d" }}</span></div>
-            {% if note.expiry_date %}
-            <div>⏳ تاريخ الانتهاء: <span class="font-semibold">{{ note.expiry_date|date:"Y-m-d" }}</span></div>
-            {% endif %}
-        </div>
+    .iraq-header .date-box {
+        text-align: left;
+        font-size: 0.95em;
+        color: #444;
+    }
 
-        {% if note.file %}
-        <div class="mt-4">
-            📎 مرفق: <a href="{{ note.file.url }}" class="text-blue-600 underline" target="_blank">عرض الملف (PDF)</a>
-        </div>
-        {% endif %}
-    </div>
+    .doc-title {
+        font-size: 1.5em;
+        font-weight: bold;
+        text-align: center;
+        margin: 18px 0 10px 0;
+        color: #1a237e;
+    }
 
-    <!-- ✅ أزرار العمليات -->
-    {% if user_profile.role == 'admin' or user_profile.role == 'supervisor' or user_profile.role == 'employee' %}
-    <div class="mt-8 flex flex-wrap gap-4 justify-center no-print">
-        <form method="post" action="{% url 'archive_note' note.id %}">
-            {% csrf_token %}
-            <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
-                🗂 أرشفة
-            </button>
-        </form>
+    .doc-info {
+        margin-bottom: 18px;
+        font-size: 1.1em;
+        color: #333;
+    }
 
-        <form method="post" action="{% url 'delete_note' note.id %}"
-            onsubmit="return confirm('هل أنت متأكد من حذف الوثيقة؟');">
-            {% csrf_token %}
-            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-                🗑 حذف
-            </button>
-        </form>
+    .doc-content {
+        margin-bottom: 18px;
+        font-size: 1.1em;
+        color: #222;
+        white-space: pre-line;
+    }
 
-        <button onclick="window.print()" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">
-            🖨 طباعة
-        </button>
+    .qr-section {
+        text-align: center;
+        margin: 32px 0 12px 0;
+    }
 
-        <a href="{{ note_pdf_url }}" download class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            ⬇ تحميل PDF
-        </a>
-    </div>
-    {% endif %}
+    .qr-section img {
+        height: 180px;
+        margin-bottom: 8px;
+    }
 
+<<<<<<< HEAD
     <!-- ✅ الصفحة الثانية للطباعة -->
     <div class="page-break print:block hidden mt-20 text-center">
         <h2 class="text-xl font-bold mb-4">📎 رمز التحقق للوثيقة</h2>
@@ -84,29 +83,22 @@
         {% else %}
         <p class="mt-4 text-gray-600">امسح الـ QR Code لعرض هذه الصفحة</p>
         {% endif %}
+=======
+    .serial {
+        text-align: center;
+        font-size: 1.1em;
+        color: #444;
+        margin-bottom: 8px;
+    }
+>>>>>>> 2384933 (تحديث الملفات وتحسين التصميم)
 
-        {% if security_warning %}
-        <div class="text-red-600 text-sm mt-6 bg-red-50 border border-red-200 p-3 rounded w-full max-w-lg mx-auto">
-            ⚠ {{ security_warning.message }}
-        </div>
-        {% endif %}
+    .official-footer {
+        margin-top: 32px;
+        color: #444;
+        font-size: 15px;
+        text-align: center;
+    }
 
-        <!-- ✅ توقيع وختم -->
-        <div class="flex justify-between items-center mt-10 print:flex hidden">
-            <div>
-                <p class="font-semibold">التوقيع:</p>
-                <p class="mt-8">....................</p>
-            </div>
-            <div class="text-center">
-                <p class="font-semibold">الختم:</p>
-                <p class="mt-8 text-2xl">🟢⬛️ ختم رسمي</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ✅ تنسيقات الطباعة -->
-<style>
     @media print {
         body {
             background: white;
@@ -114,14 +106,64 @@
             font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
         }
 
-        .page-break {
-            page-break-before: always;
-        }
-
-        nav,
         .no-print {
             display: none !important;
         }
+
+        .bordered-box {
+            box-shadow: none !important;
+            border: 2px solid #222 !important;
+        }
     }
 </style>
+
+<div class="bordered-box max-w-3xl mx-auto">
+    <div class="iraq-header">
+        <div class="gov">
+            جمهورية العراق<br>
+            وزارة العدل - دائرة الكتاب العدول - الباب
+        </div>
+        <img src="{% static 'logo.png' %}" alt="شعار العراق" class="logo">
+        <div class="date-box">
+            التاريخ: {{ note.created_at|date:"Y-m-d" }}<br>
+            رقم الوثيقة: {{ note.id }}
+        </div>
+    </div>
+    <div class="doc-title">{{ note.title }}</div>
+    <div class="doc-info">
+        <b>نوع الوثيقة:</b> {{ note.get_doc_type_display }}<br>
+        <b>الجهة المصدرة:</b> {{ note.issuer_name }}<br>
+        <b>الجهة المستلمة:</b> {{ note.recipient_name }}<br>
+        <b>أنشئت بواسطة:</b> {{ note.created_by.username }}<br>
+        {% if note.expiry_date %}<b>تاريخ الانتهاء:</b> {{ note.expiry_date|date:"Y-m-d" }}<br>{% endif %}
+    </div>
+    <div class="doc-content">{{ note.content }}</div>
+    {% if note.file %}
+    <div class="doc-info">
+        <b>📎 مرفق:</b> <a href="{{ note.file.url }}" class="text-blue-600 underline" target="_blank">عرض الملف
+            (PDF)</a>
+    </div>
+    {% endif %}
+    <div class="qr-section">
+        <img src="data:image/png;base64,{{ img_str }}" alt="QR Code">
+        <div class="serial">رقم التحقق: {{ note.access_token }}</div>
+        <div class="text-gray-600 text-sm mt-2">
+            {% if note.file %}
+            امسح الـ QR Code لعرض الملف المرفق مباشرة
+            {% else %}
+            امسح الـ QR Code لعرض هذه الصفحة
+            {% endif %}
+        </div>
+    </div>
+    {% if security_warning %}
+    <div class="text-red-600 text-sm mt-6 bg-red-50 border border-red-200 p-3 rounded w-full max-w-lg mx-auto">
+        ⚠ {{ security_warning.message }}
+    </div>
+    {% endif %}
+    <div class="official-footer">
+        هذه الوثيقة صادرة إلكترونياً من اتحاد الصحفيين العراقيين ولا تحتاج توقيعاً أو ختم ورقي.<br>
+        يمكنك حفظ صورة الوثيقة في هاتفك واستخدامها عند الحاجة.<br>
+        تؤيد صحة صدور الوثيقة الإلكترونية بعد مطابقتها مع الوثيقة الورقية.
+    </div>
+</div>
 {% endblock %}

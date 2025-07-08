@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# VS Code settings
+.vscode/
+
+# macOS
+.DS_Store
+
+# Render & deployment
+*.sqlite3
+.env
+.env.local
+.env.production
+.env.example
+
+# Compiled files
+*.mo
+*.swp
+
+# Node and frontend cache
+node_modules/
+npm-debug.log
+
+# Others
+*.bak
+*.orig

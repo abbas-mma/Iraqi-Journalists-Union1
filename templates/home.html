@@ -2,108 +2,125 @@
 {% block title %}لوحة التحكم{% endblock %}
 {% block content %}
 <div class="dashboard">
-        <div class="header">
-            <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                <img src="/static/images/ministry_logo.png.jpg" alt="شعار اتحاد الصحفيين العراقيين" style="width: 80px; margin-bottom: 8px;">
-                <span class="site-title" style="font-size:2.3em;">اتحاد الصحفيين العراقيين</span>
-            </div>
-            <span class="profile">👤 {{ user.username }} ({{ user_profile.get_role_display }})</span>
-            <a class="logout" href="{% url 'logout' %}">تسجيل الخروج</a>
+    <div class="header">
+        <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+            <img src="/static/images/ministry_logo.png.jpg" alt="شعار اتحاد الصحفيين العراقيين"
+                style="width: 80px; margin-bottom: 8px;">
+            <span class="site-title" style="font-size:2.3em;">اتحاد الصحفيين العراقيين</span>
         </div>
-        <div class="features-bar">
-            <button class="feature-btn" onclick="showAddNoteModal()">إضافة وثيقة</button>
-            <button class="feature-btn" onclick="showArchive()">الأرشيف</button>
-            <div class="dropdown" style="position:relative;display:inline-block;">
-                <button class="feature-btn" onclick="toggleNotifications()">الإشعارات <span id="notif-count" style="background:#c0392b;color:#fff;border-radius:50%;padding:2px 8px;font-size:0.9em;">3</span></button>
-                <div id="notif-dropdown" style="display:none;position:absolute;right:0;top:40px;background:#fff;box-shadow:0 2px 8px #0002;border-radius:8px;min-width:220px;z-index:10;">
-                    <div style="padding:14px 18px;border-bottom:1px solid #eee;">وثيقة جديدة أضيفت</div>
-                    <div style="padding:14px 18px;border-bottom:1px solid #eee;">تم تحديث بيانات المستخدم</div>
-                    <div style="padding:14px 18px;">تنبيه: وثيقة على وشك الانتهاء</div>
-                </div>
-            </div>
-            <button class="feature-btn" onclick="showUserModal()">المستخدمون</button>
-            <button class="feature-btn" onclick="showSettingsModal()">الإعدادات</button>
-        </div>
-        <div style="display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px;">
-            <div style="background: #e3f2fd; border-radius: 10px; padding: 18px 32px; min-width: 180px; text-align: center;">
-                <div style="font-size: 1.3em; color: #1976d2;">📄</div>
-                <div>عدد الوثائق النشطة</div>
-                <div style="font-weight: bold; font-size: 1.4em;">{{ stats.active }}</div>
-            </div>
-            <div style="background: #fce4ec; border-radius: 10px; padding: 18px 32px; min-width: 180px; text-align: center;">
-                <div style="font-size: 1.3em; color: #c2185b;">🗄️</div>
-                <div>عدد الوثائق المؤرشفة</div>
-                <div style="font-weight: bold; font-size: 1.4em;">{{ stats.archived }}</div>
-            </div>
-            <div style="background: #fff9c4; border-radius: 10px; padding: 18px 32px; min-width: 180px; text-align: center;">
-                <div style="font-size: 1.3em; color: #fbc02d;">⏳</div>
-                <div>عدد الوثائق المنتهية</div>
-                <div style="font-weight: bold; font-size: 1.4em;">{{ stats.expired }}</div>
-            </div>
-            <div style="background: #e8f5e9; border-radius: 10px; padding: 18px 32px; min-width: 180px; text-align: center;">
-                <div style="font-size: 1.3em; color: #388e3c;">👥</div>
-                <div>عدد المستخدمين</div>
-                <div style="font-weight: bold; font-size: 1.4em;">{{ stats.users }}</div>
+        <span class="profile">👤 {{ user.username }} ({{ user_profile.get_role_display }})</span>
+        <a class="logout" href="{% url 'logout' %}">تسجيل الخروج</a>
+    </div>
+    <div class="features-bar">
+        <button class="feature-btn" onclick="showAddNoteModal()">إضافة وثيقة</button>
+        <button class="feature-btn" onclick="showArchive()">الأرشيف</button>
+        <div class="dropdown" style="position:relative;display:inline-block;">
+            <button class="feature-btn" onclick="toggleNotifications()">الإشعارات <span id="notif-count"
+                    style="background:#c0392b;color:#fff;border-radius:50%;padding:2px 8px;font-size:0.9em;">3</span></button>
+            <div id="notif-dropdown"
+                style="display:none;position:absolute;right:0;top:40px;background:#fff;box-shadow:0 2px 8px #0002;border-radius:8px;min-width:220px;z-index:10;">
+                <div style="padding:14px 18px;border-bottom:1px solid #eee;">وثيقة جديدة أضيفت</div>
+                <div style="padding:14px 18px;border-bottom:1px solid #eee;">تم تحديث بيانات المستخدم</div>
+                <div style="padding:14px 18px;">تنبيه: وثيقة على وشك الانتهاء</div>
             </div>
         </div>
-        <!-- نموذج البحث المتقدم -->
-        <form method="get" class="search-bar" style="margin-bottom: 24px;">
-            <input type="text" name="q" value="{{ request.GET.q }}" placeholder="ابحث عن عنوان الوثيقة..." style="margin-left:8px;">
-            <select name="doc_type" style="margin-left:8px;">
-                <option value="">كل الأنواع</option>
-                <option value="administrative" {% if request.GET.doc_type == 'administrative' %}selected{% endif %}>أمر إداري</option>
-                <option value="official" {% if request.GET.doc_type == 'official' %}selected{% endif %}>كتاب رسمي</option>
-                <option value="circular" {% if request.GET.doc_type == 'circular' %}selected{% endif %}>تعميم</option>
-            </select>
-            <input type="date" name="created_at" value="{{ request.GET.created_at }}" style="margin-left:8px;">
-            <button type="submit" class="feature-btn">بحث متقدم</button>
-        </form>
-        <div class="notes-list">
-            {% if notes %}
-                <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
-                    <thead>
-                        <tr style="background:#f5f5f5;">
-                            <th style="padding:10px; border:1px solid #eee;">العنوان</th>
-                            <th style="padding:10px; border:1px solid #eee;">النوع</th>
-                            <th style="padding:10px; border:1px solid #eee;">تاريخ الإنشاء</th>
-                            <th style="padding:10px; border:1px solid #eee;">الحالة</th>
-                            <th style="padding:10px; border:1px solid #eee;">الوسوم</th>
-                            <th style="padding:10px; border:1px solid #eee;">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for note in notes %}
-                        <tr style="background: {% if note.is_archived %}#fce4ec{% elif note.expiry_date and note.expiry_date < now %}#fff9c4{% else %}#fafafa{% endif %};">
-                            <td style="padding:10px; border:1px solid #eee;">
-                                <span class="note-title">{{ note.title }}</span>
-                            </td>
-                            <td style="padding:10px; border:1px solid #eee;">
-                                {{ note.get_doc_type_display }}
-                            </td>
-                            <td style="padding:10px; border:1px solid #eee;">
-                                {{ note.created_at|date:"Y-m-d" }}
-                            </td>
-                            <td style="padding:10px; border:1px solid #eee;">
-                                {% if note.is_archived %}<span style="color:#c2185b;">مؤرشفة</span>{% elif note.expiry_date and note.expiry_date < now %}<span style="color:#fbc02d;">منتهية</span>{% else %}<span style="color:#388e3c;">نشطة</span>{% endif %}
-                            </td>
-                            <td style="padding:10px; border:1px solid #eee;">
-                                {% for tag in note.tags.all %}
-                                    <span style="background:#e3eafc; color:#1a237e; border-radius:5px; padding:2px 8px; margin-left:3px; font-size:0.95em;">{{ tag.name }}</span>
-                                {% empty %}
-                                    <span style="color:#bbb;">بدون وسوم</span>
-                                {% endfor %}
-                            </td>
-                            <td style="padding:10px; border:1px solid #eee;">
-                                <a href="{% url 'note_detail' note.access_token %}" style="color:#2980b9;">عرض</a>
-                                {% if note.file %}<a href="{{ note.file.url }}" download style="color:#388e3c;">تحميل</a>{% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <div class="no-notes">لا توجد وثائق متاحة.</div>
-            {% endif %}
+        <button class="feature-btn" onclick="showUserModal()">المستخدمون</button>
+        <button class="feature-btn" onclick="showSettingsModal()">الإعدادات</button>
+    </div>
+    <div style="display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px;">
+        <div
+            style="background: #e3f2fd; border-radius: 10px; padding: 18px 32px; min-width: 180px; text-align: center;">
+            <div style="font-size: 1.3em; color: #1976d2;">📄</div>
+            <div>عدد الوثائق النشطة</div>
+            <div style="font-weight: bold; font-size: 1.4em;">{{ stats.active }}</div>
+        </div>
+        <div
+            style="background: #fce4ec; border-radius: 10px; padding: 18px 32px; min-width: 180px; text-align: center;">
+            <div style="font-size: 1.3em; color: #c2185b;">🗄️</div>
+            <div>عدد الوثائق المؤرشفة</div>
+            <div style="font-weight: bold; font-size: 1.4em;">{{ stats.archived }}</div>
+        </div>
+        <div
+            style="background: #fff9c4; border-radius: 10px; padding: 18px 32px; min-width: 180px; text-align: center;">
+            <div style="font-size: 1.3em; color: #fbc02d;">⏳</div>
+            <div>عدد الوثائق المنتهية</div>
+            <div style="font-weight: bold; font-size: 1.4em;">{{ stats.expired }}</div>
+        </div>
+        <div
+            style="background: #e8f5e9; border-radius: 10px; padding: 18px 32px; min-width: 180px; text-align: center;">
+            <div style="font-size: 1.3em; color: #388e3c;">👥</div>
+            <div>عدد المستخدمين</div>
+            <div style="font-weight: bold; font-size: 1.4em;">{{ stats.users }}</div>
         </div>
     </div>
+    <!-- نموذج البحث المتقدم -->
+    <form method="get" class="search-bar" style="margin-bottom: 24px;">
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="ابحث عن عنوان الوثيقة..."
+            style="margin-left:8px;">
+        <select name="doc_type" style="margin-left:8px;">
+            <option value="">كل الأنواع</option>
+            <option value="administrative" {% if request.GET.doc_type|default:''=='administrative' %}selected{% endif
+                %}>أمر إداري</option>
+            <option value="official" {% if request.GET.doc_type|default:''=='official' %}selected{% endif %}>كتاب رسمي
+            </option>
+            <option value="circular" {% if request.GET.doc_type|default:''=='circular' %}selected{% endif %}>تعميم
+            </option>
+        </select>
+        <input type="date" name="created_at" value="{{ request.GET.created_at|default:'' }}" style="margin-left:8px;">
+        <button type="submit" class="feature-btn">بحث متقدم</button>
+    </form>
+    <div class="notes-list">
+        {% if notes %}
+        <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+            <thead>
+                <tr style="background:#e73030;">
+                    <th style="padding:10px; border:1px solid #eee;">العنوان</th>
+                    <th style="padding:10px; border:1px solid #eee;">النوع</th>
+                    <th style="padding:10px; border:1px solid #eee;">تاريخ الإنشاء</th>
+                    <th style="padding:10px; border:1px solid #eee;">الحالة</th>
+                    <th style="padding:10px; border:1px solid #eee;">الوسوم</th>
+                    <th style="padding:10px; border:1px solid #eee;">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for note in notes %}
+                <tr
+                    style="background: {% if note.is_archived %}#fce4ec{% elif note.expiry_date and note.expiry_date < now %}#fff9c4{% else %}#fafafa{% endif %};">
+                    <td style="padding:10px; border:1px solid #eee;">
+                        <span class="note-title">{{ note.title }}</span>
+                    </td>
+                    <td style="padding:10px; border:1px solid #eee;">
+                        {{ note.get_doc_type_display }}
+                    </td>
+                    <td style="padding:10px; border:1px solid #eee;">
+                        {{ note.created_at|date:"Y-m-d" }}
+                    </td>
+                    <td style="padding:10px; border:1px solid #eee;">
+                        {% if note.is_archived %}<span style="color:#c2185b;">مؤرشفة</span>{% elif note.expiry_date and
+                        note.expiry_date < now %}<span style="color:#fbc02d;">منتهية</span>{% else %}<span
+                                style="color:#388e3c;">نشطة</span>{% endif %}
+                    </td>
+                    <td style="padding:10px; border:1px solid #eee;">
+                        {% for tag in note.tags.all %}
+                        <span
+                            style="background:#e3eafc; color:#1a237e; border-radius:5px; padding:2px 8px; margin-left:3px; font-size:0.95em;">{{
+                            tag.name }}</span>
+                        {% empty %}
+                        <span style="color:#bbb;">بدون وسوم</span>
+                        {% endfor %}
+                    </td>
+                    <td style="padding:10px; border:1px solid #eee;">
+                        <a href="{% url 'note_detail' note.access_token %}" style="color:#2980b9;">عرض</a>
+                        {% if note.file %}<a href="{{ note.file.url }}" download style="color:#388e3c;">تحميل</a>{%
+                        endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-notes">لا توجد وثائق متاحة.</div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

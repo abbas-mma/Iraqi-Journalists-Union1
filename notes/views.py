@@ -209,11 +209,8 @@ def note_detail(request, token):
 @login_required
 def create_note(request):
     user_profile = get_user_profile(request)
-
     if user_profile.role not in ['admin', 'supervisor', 'employee']:
-        # تسجيل محاولة وصول غير مصرح بها
         from django.core.mail import send_mail
-
         send_mail(
             subject="محاولة إنشاء وثيقة بدون صلاحية",
             message=f"المستخدم: {request.user.username} ({request.user.email})\nنوع الحساب: {user_profile.get_role_display()}\nتاريخ ووقت المحاولة: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}",
@@ -222,7 +219,6 @@ def create_note(request):
             fail_silently=True
         )
         return render(request, 'notes/no_permission.html', {'user_profile': user_profile})
-
 
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -248,22 +244,21 @@ def create_note(request):
             access_token=token,
             file=attachment
         )
-
         if tag_ids:
             tags = Tag.objects.filter(id__in=tag_ids)
             note.tags.set(tags)
 
-        # توليد QR Code
-        note_url = request.build_absolute_uri(f'/note/{token}/')
-        qr = qrcode.make(note_url)
+        serial_number = note.id
+        if note.file:
+            qr_data = request.build_absolute_uri(note.file.url)
+        else:
+            qr_data = request.build_absolute_uri(f'/note/{token}/')
+        qr = qrcode.make(qr_data)
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
-
-
-
-        # إعداد مسار الخط العربي
-        font_path = f"file://{settings.BASE_DIR}/static/fonts/Amiri-Regular.ttf"
+        font_path = f"file://{os.path.abspath(os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Amiri-Regular.ttf')).replace('\\', '/')}"
+        official_footer = "هذه الوثيقة صادرة إلكترونياً من اتحاد الصحفيين العراقيين ولا تحتاج توقيعاً أو ختم ورقي."
         html_content = render_to_string('notes/note_print.html', {
             'note': note,
             'user_profile': user_profile,
@@ -271,24 +266,22 @@ def create_note(request):
             'security_warning': SecurityWarning.objects.first(),
             'logo_url': request.build_absolute_uri('/static/logo.png'),
             'font_path': font_path,
+            'serial_number': serial_number,
+            'official_footer': official_footer,
         })
-
         pdf_filename = f"{title.replace(' ', '_')}_{token}.pdf"
-        pdf_path = os.path.join(settings.MEDIA_ROOT, 'generated_pdfs', pdf_filename)
-        os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
-
-        # توليد PDF باستخدام WeasyPrint
-        HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(pdf_path)
-
+        pdf_dir = os.path.join(settings.MEDIA_ROOT, 'generated_pdfs')
+        pdf_path = os.path.join(pdf_dir, pdf_filename)
+        os.makedirs(pdf_dir, exist_ok=True)
+        try:
+            HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(pdf_path)
+        except Exception as e:
+            print(f"PDF generation error: {e}")
         note_pdf_url = f"{settings.MEDIA_URL}generated_pdfs/{pdf_filename}"
-
-
-        # إشعار بريد إلكتروني لصاحب الوثيقة (إذا كان لديه بريد)
         if request.user.email:
             subject = "تم إنشاء وثيقة جديدة"
-            message = f"تم إنشاء وثيقة جديدة بعنوان: {title}\nرابط الوثيقة: {note_url}"
+            message = f"تم إنشاء وثيقة جديدة بعنوان: {title}"
             send_notification_email(subject, message, [request.user.email])
-
         return render(request, 'notes/create_note.html', {
             'success': True,
             'new_note_token': token,
@@ -296,7 +289,6 @@ def create_note(request):
             'note_pdf_url': note_pdf_url,
             'tags': Tag.objects.all(),
         })
-
     return render(request, 'notes/create_note.html', {
         'tags': Tag.objects.all(),
     })

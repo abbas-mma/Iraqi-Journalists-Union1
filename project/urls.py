@@ -13,9 +13,6 @@ urlpatterns = [
 
     # ✅ روابط تطبيق notes تكون من الجذر
     path('', include('notes.urls')),
-
-    # ✅ إعادة التوجيه من الجذر إلى home
-    path('', lambda request: redirect('home', permanent=False)),
 ]
 
 # ✅ دعم ملفات media (صور، PDF، توقيع...) أثناء التطوير
