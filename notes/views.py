@@ -204,7 +204,6 @@ def note_detail(request, token):
         'note_pdf_url': note_pdf_url,
         'attachment_url': attachment_url,
     })
-# ✅ عرض صفحة QR فقط
 @login_required
 def note_qr_only(request, token):
     note = get_object_or_404(Note, access_token=token)
@@ -216,11 +215,11 @@ def note_qr_only(request, token):
         (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
         return render(request, 'notes/no_permission.html')
 
-    # توليد QR
+    # ✅ توليد QR: يشير فقط إلى الملف المرفق إن وجد
     if note.file:
         qr_data = request.build_absolute_uri(note.file.url)
     else:
-        qr_data = request.build_absolute_uri()
+        qr_data = request.build_absolute_uri('/')
 
     qr = qrcode.make(qr_data)
     buffer = BytesIO()
