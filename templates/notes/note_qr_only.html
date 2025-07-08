@@ -5,65 +5,88 @@
     <title>التحقق من الوثيقة</title>
     <style>
         @page {
+            size: A4;
             margin: 0;
         }
 
         body {
             font-family: 'Amiri', serif;
             background-color: white;
-            margin: 40px;
+            margin: 50px;
             padding: 40px;
             text-align: center;
             direction: rtl;
-            border: 8px solid #000;
+            border: 6px double #000;
             position: relative;
         }
 
         .header {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .logo {
-            width: 70px;
+            width: 80px;
             margin-bottom: 10px;
+        }
+
+        .org-name {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .sub-header {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .date {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #555;
         }
 
         .main-text {
             font-size: 16px;
-            margin: 30px 0;
+            margin: 40px auto;
             line-height: 2;
-            z-index: 2;
-            position: relative;
+            width: 90%;
         }
 
         .qr-box {
-            border: 2px solid black;
+            border: 2px dashed #444;
             display: inline-block;
             padding: 15px;
             margin-top: 10px;
-            z-index: 2;
-            position: relative;
+            background-color: #f9f9f9;
+        }
+
+        .qr-box img {
+            width: 220px;
+            height: 220px;
         }
 
         .footer {
             font-size: 14px;
-            margin-top: 40px;
+            margin-top: 50px;
+            color: #444;
             line-height: 1.8;
-            color: #333;
-            z-index: 2;
-            position: relative;
         }
 
         /* ✅ العلامة المائية */
         .watermark {
             position: absolute;
-            top: 40%;
+            top: 45%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 40px;
+            font-size: 38px;
             color: rgba(0, 0, 0, 0.05);
             z-index: 1;
             white-space: nowrap;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 2;
         }
     </style>
 </head>
@@ -72,27 +95,30 @@
     <!-- ✅ العلامة المائية -->
     <div class="watermark">اتحاد الصحفيين العراقيين – المقر العام</div>
 
-    <div class="header">
-        <img src="{{ logo_url }}" alt="شعار الاتحاد" class="logo">
-        <div><strong>اتحاد الصحفيين العراقيين</strong></div>
-        <div>المقر العام</div>
-        <div>التاريخ: {{ note.created_at|date:"Y-m-d" }}</div>
-    </div>
+    <div class="content-layer">
+        <div class="header">
+            <img src="{{ logo_url }}" alt="شعار الاتحاد" class="logo">
+            <div class="org-name">اتحاد الصحفيين العراقيين</div>
+            <div class="sub-header">المقر العام</div>
+            <div class="date">تاريخ الإصدار: {{ note.created_at|date:"Y-m-d" }}</div>
+        </div>
 
-    <div class="main-text">
-        إن محافظتك على هذه الوثيقة دون ضرر يُمكنك من استخدامها في الدوائر المرتبطة بهذا النظام.<br>
-        يمكنك حفظ صورة الوثيقة في هاتفك لاستخدامها عند الضرورة.<br>
-        تُؤيّد صحة صدور الوثيقة الإلكترونية بعد مطابقتها مع الوثيقة الورقية.<br>
-        <strong>وثيقة خاصة لا يمكن قراءتها إلا بحساب من الاتحاد.</strong>
-    </div>
+        <div class="main-text">
+            تُؤكد هذه الصفحة صحة الوثيقة الإلكترونية المرفقة. يمكن استخدام الرمز أدناه للتحقق من مصدر الوثيقة.<br>
+            الوثيقة صالحة فقط إذا تم قراءتها من خلال النظام الرسمي للاتحاد.<br>
+            <strong>يُمنع مشاركة أو تداول هذا الرمز خارج الجهات الرسمية.</strong>
+        </div>
 
-    <div class="qr-box">
-        <img src="data:image/png;base64,{{ img_str }}" alt="QR Code" width="220">
-    </div>
+        {% if img_str %}
+        <div class="qr-box">
+            <img src="data:image/png;base64,{{ img_str }}" alt="QR Code">
+        </div>
+        {% endif %}
 
-    <div class="footer">
-        الوثيقة صادرة إلكترونيًا من اتحاد الصحفيين العراقيين – المقر العام.<br>
-        في حال وجود مشكلة في قراءة رمز التحقق، يرجى الاتصال على الرقم: <strong>0771214328</strong>.
+        <div class="footer">
+            هذه الوثيقة صادرة إلكترونيًا من اتحاد الصحفيين العراقيين – المقر العام.<br>
+            للاستفسار أو التحقق، يرجى الاتصال على الرقم: <strong>0771214328</strong>.
+        </div>
     </div>
 
     <script>

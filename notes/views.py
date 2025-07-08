@@ -170,28 +170,30 @@ def home(request):
 
 
 # ✅ عرض تفاصيل وثيقة مع QR و PDF (حماية صارمة: لا أحد يصل إلا بصلاحية)
+# ✅ عرض تفاصيل وثيقة مع QR
 @login_required
 def note_detail(request, token):
     note = get_object_or_404(Note, access_token=token)
     user_profile = get_user_profile(request)
 
-    # حماية صارمة: لا يمكن الوصول إلا إذا كان المستخدم لديه صلاحية مناسبة
+    # حماية صارمة
     if (user_profile.role == 'viewer' or 
         (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or 
         (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
         return render(request, 'notes/no_permission.html')
 
-    # إذا كان هناك ملف مرفق، استخدم رابطه في QR
+    # QR فقط إذا يوجد مرفق
     if note.file:
         qr_data = request.build_absolute_uri(note.file.url)
         attachment_url = qr_data
+
+        qr = qrcode.make(qr_data)
+        buffer = BytesIO()
+        qr.save(buffer, format='PNG')
+        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
     else:
-        qr_data = request.build_absolute_uri()
+        qr_code_base64 = None
         attachment_url = ''
-    qr = qrcode.make(qr_data)
-    buffer = BytesIO()
-    qr.save(buffer, format='PNG')
-    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
 
     pdf_filename = f"{note.title.replace(' ', '_')}_{note.access_token}.pdf"
     note_pdf_url = f"{settings.MEDIA_URL}generated_pdfs/{pdf_filename}"
@@ -204,37 +206,38 @@ def note_detail(request, token):
         'note_pdf_url': note_pdf_url,
         'attachment_url': attachment_url,
     })
+
+# ✅ صفحة QR فقط - تعرض صورة QR إن وُجد مرفق، وإلا تعرض رسالة
 @login_required
 def note_qr_only(request, token):
     note = get_object_or_404(Note, access_token=token)
     user_profile = get_user_profile(request)
 
-    # الحماية: فقط المصرح لهم يمكنهم رؤية QR
     if (user_profile.role == 'viewer' or 
         (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or 
         (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
         return render(request, 'notes/no_permission.html')
 
-    # ✅ توليد QR: يشير فقط إلى الملف المرفق إن وجد
     if note.file:
         qr_data = request.build_absolute_uri(note.file.url)
+
+        qr = qrcode.make(qr_data)
+        buffer = BytesIO()
+        qr.save(buffer, format='PNG')
+        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+        return render(request, 'notes/note_qr_only.html', {
+            'note': note,
+            'img_str': qr_code_base64,
+            'serial_number': note.id,
+            'logo_url': request.build_absolute_uri('/static/logo.png'),
+        })
     else:
-        qr_data = request.build_absolute_uri('/')
-
-    qr = qrcode.make(qr_data)
-    buffer = BytesIO()
-    qr.save(buffer, format='PNG')
-    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
-
-    serial_number = note.id
-
-    return render(request, 'notes/note_qr_only.html', {
-        'note': note,
-        'img_str': qr_code_base64,
-        'serial_number': serial_number,
-        'logo_url': request.build_absolute_uri('/static/logo.png'),
-    }) 
-    
+        # لا يوجد مرفق → عرض صفحة توضح ذلك
+        return render(request, 'notes/no_attachment.html', {
+            'note': note,
+        }) 
+        
 import datetime
 import logging
 logger = logging.getLogger(__name__)
@@ -265,7 +268,7 @@ def create_note(request):
         tag_ids = request.POST.getlist('tags')
         token = uuid.uuid4()
 
-        # ✅ معالجة تاريخ الانتهاء
+        # ✅ تاريخ الانتهاء
         expiry_date_str = request.POST.get('expiry_date')
         expiry_date = None
         if expiry_date_str:
@@ -306,7 +309,7 @@ def create_note(request):
         qr.save(buffer, format='PNG')
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
 
-        # ✅ إعداد PDF الرئيسي
+        # ✅ إعداد PDF
         font_path = "file://" + os.path.abspath(
             os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Amiri-Regular.ttf')
         ).replace("\\", "/")
@@ -334,7 +337,7 @@ def create_note(request):
         except Exception as e:
             logger.error(f"PDF generation error: {e}")
 
-        # ✅ إنشاء صفحة QR فقط PDF
+        # ✅ QR Only PDF
         html_qr_only = render_to_string('notes/note_qr_only.html', {
             'note': note,
             'img_str': qr_code_base64,
@@ -357,13 +360,17 @@ def create_note(request):
             send_notification_email(subject, message, [request.user.email])
 
         # ✅ توجيه المستخدم إلى صفحة عرض الوثيقة
-        return redirect('note_qr_only', token=note.access_token)
+        if note.file:
+            return redirect('note_qr_only', token=note.access_token)
+        else:
+            return redirect('note_detail', token=note.access_token)
 
-
-    # عرض النموذج فارغ
+    # ✅ في حالة GET (عرض النموذج)
     return render(request, 'notes/create_note.html', {
+        'user_profile': user_profile,
         'tags': Tag.objects.all(),
     })
+
  
 
 # ✅ عمليات الأرشفة والحذف والاسترجاع
