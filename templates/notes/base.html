@@ -20,19 +20,22 @@
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
             <!-- شعار -->
             <div class="flex items-center space-x-2 space-x-reverse">
-                <img src="{% static 'logo.png' %}" class="h-10" alt="شعار الاتحاد">
+                <img src="{% static 'images/logo.png' %}" class="h-10" alt="شعار الاتحاد">
                 <span class="text-xl font-bold text-blue-800">اتحاد الصحفيين العراقيين</span>
             </div>
+            
             <!-- 🔍 شريط البحث -->
             <form action="{% url 'home' %}" method="get" class="hidden md:block">
                 <input type="text" name="q" placeholder="ابحث عن وثيقة..."
                     class="rounded-lg px-4 py-1 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </form>
+
             <!-- ✅ زر إنشاء وثيقة واضح -->
             <a href="{% url 'create_note' %}"
                 class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md ml-2">
                 ➕ إنشاء وثيقة
             </a>
+
             <!-- ☰ قائمة المستخدم -->
             <div class="relative inline-block text-left">
                 <button onclick="toggleMenu()"
@@ -44,19 +47,15 @@
                     <a href="{% url 'home' %}" class="block px-4 py-2 hover:bg-gray-100">🏠 الرئيسية</a>
                     <a href="{% url 'create_note' %}" class="block px-4 py-2 hover:bg-gray-100">➕ إنشاء وثيقة</a>
                     <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-gray-100">👤 الملف الشخصي</a>
-                    <a href="{% url 'archived_notes' %}" class="block px-4 py-2 hover:bg-gray-100">🗂 الوثائق
-                        المؤرشفة</a>
+                    <a href="{% url 'archived_notes' %}" class="block px-4 py-2 hover:bg-gray-100">🗂 الوثائق المؤرشفة</a>
                     <a href="{% url 'expired_notes' %}" class="block px-4 py-2 hover:bg-gray-100">⏳ الوثائق المنتهية</a>
-                    <a href="{% url 'outgoing_notes' %}" class="block px-4 py-2 hover:bg-gray-100">📤 الوثائق
-                        الصادرة</a>
-                    <a href="{% url 'incoming_notes' %}" class="block px-4 py-2 hover:bg-gray-100">📥 الوثائق
-                        الواردة</a>
+                    <a href="{% url 'outgoing_notes' %}" class="block px-4 py-2 hover:bg-gray-100">📤 الوثائق الصادرة</a>
+                    <a href="{% url 'incoming_notes' %}" class="block px-4 py-2 hover:bg-gray-100">📥 الوثائق الواردة</a>
                     <a href="{% url 'user_notes' %}" class="block px-4 py-2 hover:bg-gray-100">📝 وثائقي</a>
                     <a href="{% url 'search_log' %}" class="block px-4 py-2 hover:bg-gray-100">🔍 سجل البحث</a>
                     <a href="{% url 'archive_log' %}" class="block px-4 py-2 hover:bg-gray-100">🗃 سجل الأرشفة</a>
                     <hr class="my-1">
-                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-gray-100">🚪 تسجيل
-                        الخروج</a>
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-gray-100">🚪 تسجيل الخروج</a>
                 </div>
             </div>
         </div>
@@ -75,7 +74,6 @@
             menu.classList.toggle("hidden");
         }
 
-        // إغلاق القائمة عند النقر خارجها
         document.addEventListener("click", function (event) {
             const menu = document.getElementById("dropdownMenu");
             const button = event.target.closest("button");

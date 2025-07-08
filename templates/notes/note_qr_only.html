@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>رمز التحقق - اتحاد الصحفيين العراقيين</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: "Amiri", serif;
+            text-align: center;
+            direction: rtl;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+        .logo {
+            width: 80px;
+            margin-bottom: 10px;
+        }
+        .qr {
+            margin: 30px 0;
+        }
+        .meta {
+            margin-top: 20px;
+        }
+        .meta div {
+            margin-bottom: 5px;
+        }
+        .footer {
+            margin-top: 40px;
+            font-size: 14px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- شعار الاتحاد -->
+    <img src="{{ logo_url }}" alt="شعار الاتحاد" class="logo">
+
+    <h2>اتحاد الصحفيين العراقيين</h2>
+    <h3>صفحة رمز التحقق للوثيقة</h3>
+
+    <!-- رمز QR -->
+    <div class="qr">
+        <img src="data:image/png;base64,{{ img_str }}" alt="رمز التحقق" width="200">
+    </div>
+
+    <!-- معلومات الوثيقة -->
+    <div class="meta">
+        <div><strong>رقم الوثيقة:</strong> {{ serial_number }}</div>
+        <div><strong>التاريخ:</strong> {{ note.created_at|date:"Y-m-d" }}</div>
+        <div><strong>رمز التحقق:</strong> {{ note.access_token }}</div>
+    </div>
+
+    <div class="footer">
+        امسح رمز التحقق (QR Code) لعرض أو تحميل محتوى الوثيقة الأصلية.
+    </div>
+
+</body>
+</html>

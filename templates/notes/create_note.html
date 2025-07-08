@@ -1,174 +1,2 @@
-{% extends 'base.html' %}
 {% load static %}
-
-{% block title %}إنشاء وثيقة جديدة{% endblock %}
-
-
-{% block content %}
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-<style>
-    body {
-        font-family: 'Cairo', 'Tahoma', 'Arial', sans-serif;
-    }
-
-    .bordered-box {
-        border: 2px solid #222;
-        border-radius: 12px;
-        padding: 24px 32px;
-        margin-bottom: 24px;
-        background: #fff;
-        position: relative;
-    }
-
-    .iraq-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-
-    .iraq-header .gov {
-        font-size: 1.1em;
-        font-weight: bold;
-        color: #222;
-    }
-
-    .iraq-header .logo {
-        height: 60px;
-    }
-
-    .iraq-header .date-box {
-        text-align: left;
-        font-size: 0.95em;
-        color: #444;
-    }
-
-    .doc-title {
-        font-size: 1.5em;
-        font-weight: bold;
-        text-align: center;
-        margin: 18px 0 10px 0;
-        color: #1a237e;
-    }
-
-    .official-footer {
-        margin-top: 32px;
-        color: #444;
-        font-size: 15px;
-        text-align: center;
-    }
-</style>
-
-<div class="bordered-box max-w-3xl mx-auto mt-6">
-    <div class="iraq-header">
-        <div class="gov">
-            جمهورية العراق<br>
-            وزارة العدل - دائرة الكتاب العدول - الباب
-        </div>
-        <img src="{% static 'logo.png' %}" alt="شعار العراق" class="logo">
-        <div class="date-box">
-            التاريخ: {{ today|default:None }}<br>
-            رقم الوثيقة: <span id="doc-id">--</span>
-        </div>
-    </div>
-    <div class="doc-title">✍️ إنشاء وثيقة جديدة</div>
-
-
-    {% if success %}
-    <div class="bg-green-100 border border-green-400 text-green-800 px-6 py-4 rounded mb-6 text-center shadow">
-        ✅ تم إنشاء الوثيقة بنجاح.
-        <div class="mt-3 space-y-2">
-            <a href="/note/{{ new_note_token }}/" target="_blank"
-                class="block text-blue-700 font-bold underline hover:text-blue-900">
-                📄 عرض الوثيقة
-            </a>
-            {% if note_pdf_url %}
-            <a href="{{ note_pdf_url }}" download
-                class="block text-green-700 underline font-medium hover:text-green-900">
-                ⬇️ تحميل PDF
-            </a>
-            {% endif %}
-            {% if img_str %}
-            <div class="flex justify-center mt-4">
-                <img src="data:image/png;base64,{{ img_str }}" alt="QR Code"
-                    class="h-32 w-32 rounded border border-gray-300 shadow">
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-
-    <form method="post" enctype="multipart/form-data" class="space-y-5">
-        {% csrf_token %}
-        <div>
-            <label class="block text-sm font-bold text-gray-700">📌 عنوان الوثيقة</label>
-            <input type="text" name="title" required
-                class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200">
-        </div>
-        <div>
-            <label class="block text-sm font-bold text-gray-700">📄 محتوى الوثيقة</label>
-            <textarea name="content" rows="7" required
-                class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200"></textarea>
-        </div>
-        <div class="flex flex-wrap gap-4">
-            <div class="flex-1 min-w-[180px]">
-                <label class="block text-sm font-bold text-gray-700">📂 نوع الوثيقة</label>
-                <select name="doc_type" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
-                    <option value="">-- اختر نوع الوثيقة --</option>
-                    <option value="official">📄 كتاب رسمي</option>
-                    <option value="administrative">📌 أمر إداري</option>
-                    <option value="circular">📢 تعميم</option>
-                </select>
-            </div>
-            <div class="flex-1 min-w-[180px]">
-                <label class="block text-sm font-bold text-gray-700">🔁 جهة الوثيقة</label>
-                <select name="direction" class="mt-1 block w-full border border-gray-300 rounded-md p-2" required>
-                    <option value="outgoing">📤 صادرة</option>
-                    <option value="incoming">📥 واردة</option>
-                </select>
-            </div>
-            <div class="flex-1 min-w-[180px]">
-                <label class="block text-sm font-bold text-gray-700">⏳ تاريخ الانتهاء (اختياري)</label>
-                <input type="datetime-local" name="expiry_date"
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2">
-            </div>
-        </div>
-        <div class="flex flex-wrap gap-4">
-            <div class="flex-1 min-w-[180px]">
-                <label class="block text-sm font-bold text-gray-700">🏢 اسم الجهة المصدرة</label>
-                <input type="text" name="issuer_name" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
-            </div>
-            <div class="flex-1 min-w-[180px]">
-                <label class="block text-sm font-bold text-gray-700">🧑‍💼 إلى (الجهة المستلمة)</label>
-                <input type="text" name="recipient_name" required
-                    class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-200">
-            </div>
-        </div>
-        <div>
-            <label class="block text-sm font-bold text-gray-700">🏷 الوسوم (Tags)</label>
-            <select name="tags" multiple class="mt-1 block w-full border border-gray-300 rounded-md p-2">
-                {% for tag in tags %}
-                <option value="{{ tag.id }}">{{ tag.name }}</option>
-                {% endfor %}
-            </select>
-            <p class="text-xs text-gray-500 mt-1">يمكنك اختيار أكثر من وسم بالضغط على Ctrl</p>
-        </div>
-        <div>
-            <label class="block text-sm font-bold text-gray-700">📎 مرفق (PDF أو صورة)</label>
-            <input type="file" name="attachment"
-                class="mt-1 block w-full border border-gray-300 rounded-md p-2 bg-gray-50">
-        </div>
-        <div class="text-center mt-8">
-            <button type="submit"
-                class="bg-blue-700 text-white px-6 py-3 rounded-md text-lg font-semibold hover:bg-blue-800 transition-all">
-                ➕ إنشاء الوثيقة
-            </button>
-        </div>
-    </form>
-    <div class="official-footer">
-        هذه الوثيقة ستصدر إلكترونياً من اتحاد الصحفيين العراقيين ولا تحتاج توقيعاً أو ختم ورقي.<br>
-        يمكنك حفظ صورة الوثيقة في هاتفك واستخدامها عند الحاجة.<br>
-        تؤيد صحة صدور الوثيقة الإلكترونية بعد مطابقتها مع الوثيقة الورقية.
-    </div>
-</div>
-{% endblock %}
+<img src="{% static 'images/logo.png' %}" alt="الشعار">

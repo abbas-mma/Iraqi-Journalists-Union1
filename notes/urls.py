@@ -7,7 +7,8 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('', views.home, name='home'),
     path('note/<uuid:token>/', views.note_detail, name='note_detail'),
-path('qr/<uuid:token>/', views.qr_note_access, name='qr_note_access'),
+    path('note/<uuid:token>/qr_only/', views.note_qr_only, name='note_qr_only'),
+    path('qr/<uuid:token>/', views.qr_note_access, name='qr_note_access'),
     path('register/', views.register, name='register'),
     path('no_permission/', views.no_permission, name='no_permission'),
     path('profile/', views.profile, name='profile'),
