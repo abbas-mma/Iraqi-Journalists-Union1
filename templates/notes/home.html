@@ -1,6 +1,5 @@
 {% extends 'notes/base.html' %}
 {% load static %}
-<img src="{% static 'logo.png' %}" alt="شعار الاتحاد" class="h-16">
 
 {% block content %}
 <div class="text-center my-4">
@@ -85,7 +84,11 @@
         <tbody>
             {% for note in notes %}
             <tr class="border-t hover:bg-gray-50">
-                <td class="px-4 py-2">{{ note.title }}</td>
+                <td class="px-4 py-2">
+    <a href="{% url 'note_detail' note.access_token %}" class="text-blue-700 hover:underline">
+        {{ note.title }}
+    </a>
+</td>
                 <td class="px-4 py-2">{{ note.get_doc_type_display }}</td>
                 <td class="px-4 py-2">
                     {% if note.is_archived %}

@@ -2,130 +2,127 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>التحقق من الوثيقة</title>
+    <title>وثيقة QR</title>
     <style>
-        @page {
-            size: A4;
-            margin: 0;
-        }
-
         body {
             font-family: 'Amiri', serif;
-            background-color: white;
-            margin: 50px;
-            padding: 40px;
-            text-align: center;
-            direction: rtl;
-            border: 6px double #000;
             position: relative;
+            margin: 40px;
+            line-height: 1.8;
+            color: #000;
         }
 
-        .header {
-            margin-bottom: 30px;
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            opacity: 0.06;
+            transform: translate(-50%, -50%);
+            z-index: 0;
         }
 
-        .logo {
-            width: 80px;
-            margin-bottom: 10px;
-        }
-
-        .org-name {
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .sub-header {
-            font-size: 16px;
-            color: #333;
-        }
-
-        .date {
-            margin-top: 5px;
-            font-size: 14px;
-            color: #555;
-        }
-
-        .main-text {
-            font-size: 16px;
-            margin: 40px auto;
-            line-height: 2;
-            width: 90%;
+        .header, .footer, .content {
+            position: relative;
+            z-index: 1;
         }
 
         .qr-box {
-            border: 2px dashed #444;
-            display: inline-block;
-            padding: 15px;
-            margin-top: 10px;
-            background-color: #f9f9f9;
+            border: 2px dashed #888;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .qr-box img {
-            width: 220px;
-            height: 220px;
+            width: 200px;
+            height: 200px;
+        }
+
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .info-left, .info-right {
+            width: 30%;
+            font-size: 14px;
+        }
+
+        .center-logo {
+            text-align: center;
+            margin-top: -20px;
+        }
+
+        .note-title {
+            font-weight: bold;
+            font-size: 20px;
+            margin: 20px 0;
+            text-align: center;
         }
 
         .footer {
-            font-size: 14px;
-            margin-top: 50px;
-            color: #444;
-            line-height: 1.8;
-        }
-
-        /* ✅ العلامة المائية */
-        .watermark {
-            position: absolute;
-            top: 45%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 38px;
-            color: rgba(0, 0, 0, 0.05);
-            z-index: 1;
-            white-space: nowrap;
-        }
-
-        .content-layer {
-            position: relative;
-            z-index: 2;
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
 
-    <!-- ✅ العلامة المائية -->
-    <div class="watermark">اتحاد الصحفيين العراقيين – المقر العام</div>
+    <!-- ✅ الشعار كعلامة مائية -->
+    <img src="{{ logo_url }}" class="watermark" alt="علامة أمان">
 
-    <div class="content-layer">
-        <div class="header">
-            <img src="{{ logo_url }}" alt="شعار الاتحاد" class="logo">
-            <div class="org-name">اتحاد الصحفيين العراقيين</div>
-            <div class="sub-header">المقر العام</div>
-            <div class="date">تاريخ الإصدار: {{ note.created_at|date:"Y-m-d" }}</div>
+    <!-- ✅ رأس الصفحة -->
+    <div class="header">
+        <div class="info-header">
+            <div class="info-left">
+                <strong>اتحاد الصحفيين العراقيين</strong><br>
+                المقر العام<br>
+                تاريخ رفع الوثيقة: {{ note.created_at|date:"Y-m-d" }}<br>
+                تاريخ رمز التحقق: {{ now|date:"Y-m-d" }}
+            </div>
+            <div class="info-right" style="text-align: left;">
+                <strong>رقم الوثيقة:</strong> ____________<br>
+                تاريخ الطباعة: {{ now|date:"Y-m-d" }}
+            </div>
         </div>
 
-        <div class="main-text">
-            تُؤكد هذه الصفحة صحة الوثيقة الإلكترونية المرفقة. يمكن استخدام الرمز أدناه للتحقق من مصدر الوثيقة.<br>
-            الوثيقة صالحة فقط إذا تم قراءتها من خلال النظام الرسمي للاتحاد.<br>
-            <strong>يُمنع مشاركة أو تداول هذا الرمز خارج الجهات الرسمية.</strong>
-        </div>
-
-        {% if img_str %}
-        <div class="qr-box">
-            <img src="data:image/png;base64,{{ img_str }}" alt="QR Code">
-        </div>
-        {% endif %}
-
-        <div class="footer">
-            هذه الوثيقة صادرة إلكترونيًا من اتحاد الصحفيين العراقيين – المقر العام.<br>
-            للاستفسار أو التحقق، يرجى الاتصال على الرقم: <strong>0771214328</strong>.
+        <div class="center-logo">
+            <img src="{{ logo_url }}" alt="شعار الاتحاد" width="80">
         </div>
     </div>
 
-    <script>
-        window.onload = function() {
-            window.print();
-        };
-    </script>
+    <!-- ✅ محتوى الوثيقة -->
+    <div class="content">
+        <p style="text-align: center;">
+            إن محافظتك على هذه الوثيقة دون ضرر يُمكنك من استخدامها في الدوائر المرتبطة بهذا النظام.<br>
+            يمكنك حفظ صورة الوثيقة في هاتفك لاستخدامها عند الضرورة.<br>
+            تؤيّد صحة صدور الوثيقة الإلكترونية بعد مطابقتها مع الوثيقة الورقية.<br>
+            <strong>وثيقة خاصة لا يمكن قراءتها إلا بحساب من الاتحاد</strong>
+        </p>
+
+        <!-- ✅ فترة الاستخدام -->
+        <p style="text-align: center; font-size: 15px; margin-bottom: 10px;">
+            فترة استخدام الوثيقة مرتبطة بتاريخ رمز التحقق
+        </p>
+
+        <!-- ✅ QR Code -->
+        <div class="qr-box">
+            <img src="data:image/png;base64,{{ img_str }}" alt="QR Code">
+            <p style="font-size: 14px; margin-top: 10px;">{{ note.access_token }}</p>
+        </div>
+    </div>
+
+    <!-- ✅ التذييل -->
+    <div class="footer">
+        في حال حدوث تلكؤ أو مشكلة في قراءة الرمز السريع، يرجى التواصل مع الدعم الفني للاتحاد.<br>
+        <strong>{{ site_url }}</strong> | <strong>0771214328</strong>
+    </div>
 
 </body>
 </html>

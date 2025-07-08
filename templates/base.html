@@ -1,4 +1,5 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -32,17 +33,7 @@
         <p class="text-sm text-gray-600">المقر العام</p>
     </div>
 
-    <!-- ✅ محتوى الصفحة المخصص -->
-    {% block content %}
-    {% endblock %}
-
-</body>
-</html>
-
-</body>
-</html>
-
-    <!-- Navbar -->
+    <!-- ✅ شريط التنقل -->
     <nav class="bg-white shadow mb-8">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-4">
@@ -59,36 +50,30 @@
                     <div
                         class="dropdown-menu absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded shadow-lg z-50 hidden">
                         <a href="/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الرئيسية</a>
-                        <a href="/create_note/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">إنشاء
-                            وثيقة</a>
-                        <a href="/archived/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الوثائق
-                            المؤرشفة</a>
-                        <a href="/expired/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الوثائق
-                            المنتهية</a>
-                        <a href="/profile/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الملف
-                            الشخصي</a>
-                        <a href="/accounts/logout/"
-                            class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600">تسجيل
-                            الخروج</a>
+                        <a href="/create_note/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">إنشاء وثيقة</a>
+                        <a href="/archived/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الوثائق المؤرشفة</a>
+                        <a href="/expired/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الوثائق المنتهية</a>
+                        <a href="/profile/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">الملف الشخصي</a>
+                        <a href="/accounts/logout/" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600">تسجيل الخروج</a>
                     </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- محتوى الصفحة -->
+    <!-- ✅ محتوى الصفحة -->
     <main class="max-w-7xl mx-auto px-4 py-6">
         {% block content %}
-        <!-- محتوى الصفحة المحددة -->
+        <!-- هنا يتم حقن محتوى الصفحات الفرعية -->
         {% endblock %}
     </main>
 
-    <!-- Footer -->
+    <!-- ✅ الفوتر -->
     <footer class="mt-12 py-4 text-center text-gray-500 dark:text-gray-400">
         &copy; 2025 اتحاد الصحفيين العراقيين - جميع الحقوق محفوظة
     </footer>
 
-    <!-- Scripts -->
+    <!-- ✅ السكربتات -->
     <script>
         // القائمة المنسدلة
         document.querySelectorAll('.dropdown > button').forEach(function (btn) {
@@ -108,9 +93,8 @@
         });
     </script>
 
-    <!-- Block scripts for charts or extra js -->
+    <!-- ✅ منطقة يمكن حقن سكربتات إضافية عند الحاجة -->
     {% block scripts %}{% endblock %}
 
 </body>
-
 </html>
