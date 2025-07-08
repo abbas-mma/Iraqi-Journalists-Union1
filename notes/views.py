@@ -119,7 +119,7 @@ def register(request):
 
 @login_required
 def home(request):
-    user_profile = get_user_profile(request)
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
     # إذا كان المستخدم عادي (وليس مشرف أو موظف أو قارئ)، يحول إلى لوحة خاصة به
     if user_profile.role not in ['admin', 'supervisor', 'employee', 'reader']:
         return redirect('user_notes')
