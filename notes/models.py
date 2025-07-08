@@ -66,16 +66,29 @@ class Note(models.Model):
         ('incoming', 'واردة'),
     ]
 
+    IMPORTANCE_CHOICES = [
+        ('normal', 'عادي'),
+        ('important', 'مهم'),
+        ('urgent', 'عاجل'),
+    ]
+
+    importance = models.CharField(
+        max_length=20,
+        choices=IMPORTANCE_CHOICES,
+        default='normal',
+        verbose_name="درجة الأهمية"
+    )
+
     title = models.CharField("عنوان الوثيقة", max_length=255)
     content = models.TextField("محتوى الوثيقة", blank=True, null=True)
     doc_type = models.CharField("نوع الوثيقة", max_length=20, choices=TYPE_CHOICES, default='official')
-    direction = models.CharField("جهة الوثيقة", max_length=10, choices=DIRECTION_CHOICES, default='outgoing')  # ✅ جديد
+    direction = models.CharField("جهة الوثيقة", max_length=10, choices=DIRECTION_CHOICES, default='outgoing')
 
     file = models.FileField("ملف مرفق (PDF)", upload_to='documents/', blank=True, null=True)
     stamp = models.ImageField("الختم", upload_to='documents/', blank=True, null=True)
     signature = models.ImageField("التوقيع", upload_to='documents/', blank=True, null=True)
     issuer_name = models.CharField("اسم الجهة المصدرة", max_length=255, blank=True, null=True)
-    recipient_name = models.CharField("اسم الجهة المستقبلة", max_length=255, blank=True, null=True)  # جديد
+    recipient_name = models.CharField("اسم الجهة المستقبلة", max_length=255, blank=True, null=True)
 
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notes')
     access_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
@@ -89,6 +102,7 @@ class Note(models.Model):
 
     def __str__(self):
         return self.title
+
 
 # ✅ التحذير الأمني
 class SecurityWarning(models.Model):

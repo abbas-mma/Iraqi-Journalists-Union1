@@ -2,28 +2,21 @@
 {% load static %}
 
 {% block content %}
-  <div class="text-center my-4">
+<div class="text-center my-4">
     <img src="{% static 'images/logo.png' %}" alt="شعار اتحاد الصحفيين العراقيين" class="mx-auto w-32 h-auto">
     <h1 class="text-xl font-bold mt-2">اتحاد الصحفيين العراقيين</h1>
     <p class="text-sm text-gray-600">المقر العام</p>
-  </div>
-  <!-- المحتوى الآخر هنا -->
-{% endblock %}
-
+</div>
 
 <!-- عنوان الصفحة -->
 <h2 class="text-3xl font-bold text-center mb-6 text-blue-800">📊 لوحة التحكم الرئيسية</h2>
 
 <!-- أزرار الإدارة -->
 <div class="flex flex-wrap justify-center gap-3 mb-6">
-    <a href="{% url 'user_management' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">➕ إضافة
-        مستخدم</a>
-    <a href="{% url 'user_management' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">👥 عرض/حذف
-        المستخدمين</a>
-    <a href="{% url 'role_change_log' %}" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">🔁 سجل
-        الصلاحيات</a>
-    <a href="{% url 'login_history' %}" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">🕵️ سجل
-        الدخول</a>
+    <a href="{% url 'user_management' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">➕ إضافة مستخدم</a>
+    <a href="{% url 'user_management' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">👥 عرض/حذف المستخدمين</a>
+    <a href="{% url 'role_change_log' %}" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">🔁 سجل الصلاحيات</a>
+    <a href="{% url 'login_history' %}" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">🕵️ سجل الدخول</a>
 </div>
 
 <!-- بطاقات الإحصائيات -->
@@ -59,9 +52,9 @@
         class="border p-2 rounded flex-1" />
     <select name="doc_type" class="border p-2 rounded">
         <option value="">كل الأنواع</option>
-        <option value="official" {% if request.GET.doc_type|default:''=='official' %}selected{% endif %}>رسمي</option>
-        <option value="internal" {% if request.GET.doc_type|default:''=='internal' %}selected{% endif %}>داخلي</option>
-        <option value="urgent" {% if request.GET.doc_type|default:''=='urgent' %}selected{% endif %}>عاجل</option>
+        <option value="official" {% if request.GET.doc_type == 'official' %}selected{% endif %}>رسمي</option>
+        <option value="internal" {% if request.GET.doc_type == 'internal' %}selected{% endif %}>داخلي</option>
+        <option value="urgent" {% if request.GET.doc_type == 'urgent' %}selected{% endif %}>عاجل</option>
     </select>
     <input type="date" name="created_at" value="{{ request.GET.created_at|default:'' }}" class="border p-2 rounded" />
     <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-black">بحث متقدم</button>
@@ -69,8 +62,7 @@
 
 <!-- زر إنشاء وثيقة -->
 <div class="text-right mb-4">
-    <a href="{% url 'create_note' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">➕ إنشاء وثيقة
-        جديدة</a>
+    <a href="{% url 'create_note' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">➕ إنشاء وثيقة جديدة</a>
 </div>
 
 <!-- جدول الوثائق -->
@@ -84,8 +76,8 @@
                 <th class="px-4 py-2">تاريخ الإنشاء</th>
                 <th class="px-4 py-2">عرض</th>
                 {% if user_profile.role in 'admin supervisor' %}
-                <th class="px-4 py-2">أرشفة</th>
-                <th class="px-4 py-2">حذف</th>
+                    <th class="px-4 py-2">أرشفة</th>
+                    <th class="px-4 py-2">حذف</th>
                 {% endif %}
             </tr>
         </thead>
@@ -95,8 +87,14 @@
                 <td class="px-4 py-2">{{ note.title }}</td>
                 <td class="px-4 py-2">{{ note.get_doc_type_display }}</td>
                 <td class="px-4 py-2">
-                    {% if note.is_archived %} مؤرشفة
-                    {% elif note.expiry_date and note.expiry_date < now %} منتهية {% else %} نشطة {% endif %} </td>
+                    {% if note.is_archived %}
+                        مؤرشفة
+                    {% elif note.expiry_date and note.expiry_date < now %}
+                        منتهية
+                    {% else %}
+                        نشطة
+                    {% endif %}
+                </td>
                 <td class="px-4 py-2">{{ note.created_at|date:"Y-m-d" }}</td>
                 <td class="px-4 py-2">
                     <a href="{% url 'note_detail' note.access_token %}" class="text-blue-600 hover:underline">عرض</a>
@@ -140,5 +138,4 @@
     <h4 class="text-lg font-bold text-blue-700 mb-2">🛠️ آخر تغييرات الصلاحيات</h4>
     <p class="text-gray-500">لا توجد تغييرات حديثة.</p>
 </div>
-
 {% endblock %}

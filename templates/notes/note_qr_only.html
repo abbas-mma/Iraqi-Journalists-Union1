@@ -2,62 +2,104 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>رمز التحقق - اتحاد الصحفيين العراقيين</title>
+    <title>التحقق من الوثيقة</title>
     <style>
         @page {
-            size: A4;
-            margin: 2cm;
+            margin: 0;
         }
+
         body {
-            font-family: "Amiri", serif;
+            font-family: 'Amiri', serif;
+            background-color: white;
+            margin: 40px;
+            padding: 40px;
             text-align: center;
             direction: rtl;
-            line-height: 1.8;
-            font-size: 16px;
+            border: 8px solid #000;
+            position: relative;
         }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
         .logo {
-            width: 80px;
+            width: 70px;
             margin-bottom: 10px;
         }
-        .qr {
+
+        .main-text {
+            font-size: 16px;
             margin: 30px 0;
+            line-height: 2;
+            z-index: 2;
+            position: relative;
         }
-        .meta {
-            margin-top: 20px;
+
+        .qr-box {
+            border: 2px solid black;
+            display: inline-block;
+            padding: 15px;
+            margin-top: 10px;
+            z-index: 2;
+            position: relative;
         }
-        .meta div {
-            margin-bottom: 5px;
-        }
+
         .footer {
-            margin-top: 40px;
             font-size: 14px;
-            color: #444;
+            margin-top: 40px;
+            line-height: 1.8;
+            color: #333;
+            z-index: 2;
+            position: relative;
+        }
+
+        /* ✅ العلامة المائية */
+        .watermark {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 40px;
+            color: rgba(0, 0, 0, 0.05);
+            z-index: 1;
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
 
-    <!-- شعار الاتحاد -->
-    <img src="{{ logo_url }}" alt="شعار الاتحاد" class="logo">
+    <!-- ✅ العلامة المائية -->
+    <div class="watermark">اتحاد الصحفيين العراقيين – المقر العام</div>
 
-    <h2>اتحاد الصحفيين العراقيين</h2>
-    <h3>صفحة رمز التحقق للوثيقة</h3>
-
-    <!-- رمز QR -->
-    <div class="qr">
-        <img src="data:image/png;base64,{{ img_str }}" alt="رمز التحقق" width="200">
+    <div class="header">
+        <img src="{{ logo_url }}" alt="شعار الاتحاد" class="logo">
+        <div><strong>اتحاد الصحفيين العراقيين</strong></div>
+        <div>المقر العام</div>
+        <div>التاريخ: {{ note.created_at|date:"Y-m-d" }}</div>
     </div>
 
-    <!-- معلومات الوثيقة -->
-    <div class="meta">
-        <div><strong>رقم الوثيقة:</strong> {{ serial_number }}</div>
-        <div><strong>التاريخ:</strong> {{ note.created_at|date:"Y-m-d" }}</div>
-        <div><strong>رمز التحقق:</strong> {{ note.access_token }}</div>
+    <div class="main-text">
+        إن محافظتك على هذه الوثيقة دون ضرر يُمكنك من استخدامها في الدوائر المرتبطة بهذا النظام.<br>
+        يمكنك حفظ صورة الوثيقة في هاتفك لاستخدامها عند الضرورة.<br>
+        تُؤيّد صحة صدور الوثيقة الإلكترونية بعد مطابقتها مع الوثيقة الورقية.<br>
+        <strong>وثيقة خاصة لا يمكن قراءتها إلا بحساب من الاتحاد.</strong>
+    </div>
+
+    <div class="qr-box">
+        <img src="data:image/png;base64,{{ img_str }}" alt="QR Code" width="220">
     </div>
 
     <div class="footer">
-        امسح رمز التحقق (QR Code) لعرض أو تحميل محتوى الوثيقة الأصلية.
+        الوثيقة صادرة إلكترونيًا من اتحاد الصحفيين العراقيين – المقر العام.<br>
+        في حال وجود مشكلة في قراءة رمز التحقق، يرجى الاتصال على الرقم: <strong>0771214328</strong>.
     </div>
+
+    <script>
+        window.onload = function() {
+            window.print();
+        };
+    </script>
 
 </body>
 </html>

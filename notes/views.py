@@ -233,12 +233,15 @@ def note_qr_only(request, token):
         'img_str': qr_code_base64,
         'serial_number': serial_number,
         'logo_url': request.build_absolute_uri('/static/logo.png'),
-    })
-
+    }) 
+    
+import datetime
+import logging
+logger = logging.getLogger(__name__)
 @login_required
 def create_note(request):
     user_profile = get_user_profile(request)
-    
+
     if user_profile.role not in ['admin', 'supervisor', 'employee']:
         from django.core.mail import send_mail
         send_mail(
@@ -256,13 +259,22 @@ def create_note(request):
         doc_type = request.POST.get('doc_type')
         direction = request.POST.get('direction')
         importance = request.POST.get('importance')
-        expiry_date = request.POST.get('expiry_date') or None
         issuer_name = request.POST.get('issuer_name')
         recipient_name = request.POST.get('recipient_name')
         attachment = request.FILES.get('attachment')
         tag_ids = request.POST.getlist('tags')
         token = uuid.uuid4()
 
+        # ✅ معالجة تاريخ الانتهاء
+        expiry_date_str = request.POST.get('expiry_date')
+        expiry_date = None
+        if expiry_date_str:
+            try:
+                expiry_date = datetime.datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                expiry_date = None
+
+        # ✅ إنشاء الوثيقة
         note = Note.objects.create(
             title=title,
             content=content,
@@ -320,11 +332,9 @@ def create_note(request):
         try:
             HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(pdf_path)
         except Exception as e:
-            print(f"PDF generation error: {e}")
+            logger.error(f"PDF generation error: {e}")
 
-        note_pdf_url = f"{settings.MEDIA_URL}generated_pdfs/{pdf_filename}"
-
-        # ✅ إعداد صفحة QR فقط
+        # ✅ إنشاء صفحة QR فقط PDF
         html_qr_only = render_to_string('notes/note_qr_only.html', {
             'note': note,
             'img_str': qr_code_base64,
@@ -338,9 +348,7 @@ def create_note(request):
         try:
             HTML(string=html_qr_only, base_url=request.build_absolute_uri('/')).write_pdf(qr_only_pdf_path)
         except Exception as e:
-            print(f"QR Only PDF error: {e}")
-
-        qr_only_pdf_url = f"{settings.MEDIA_URL}generated_pdfs/{qr_only_pdf_filename}"
+            logger.error(f"QR Only PDF error: {e}")
 
         # ✅ إشعار بالبريد
         if request.user.email:
@@ -348,19 +356,14 @@ def create_note(request):
             message = f"تم إنشاء وثيقة جديدة بعنوان: {title}"
             send_notification_email(subject, message, [request.user.email])
 
-        return render(request, 'notes/create_note.html', {
-            'success': True,
-            'new_note_token': token,
-            'img_str': qr_code_base64,
-            'note_pdf_url': note_pdf_url,
-            'qr_only_pdf_url': qr_only_pdf_url,
-            'tags': Tag.objects.all(),
-        })
+        # ✅ توجيه المستخدم إلى صفحة عرض الوثيقة
+        return redirect('note_qr_only', token=note.access_token)
 
+
+    # عرض النموذج فارغ
     return render(request, 'notes/create_note.html', {
         'tags': Tag.objects.all(),
     })
-
  
 
 # ✅ عمليات الأرشفة والحذف والاسترجاع
