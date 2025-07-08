@@ -30,8 +30,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'notes',  # تأكد أن اسم التطبيق صحيح
+    'notes.apps.NotesConfig',  # ← هذا مهم لتفعيل signals
 ]
+
 
 # الوسيطات (Middleware)
 MIDDLEWARE = [
