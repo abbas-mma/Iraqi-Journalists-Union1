@@ -207,20 +207,24 @@ def note_detail(request, token):
         'attachment_url': attachment_url,
     })
 
+
 # ✅ صفحة QR فقط - تعرض صورة QR إن وُجد مرفق، وإلا تعرض رسالة
 @login_required
 def note_qr_only(request, token):
     note = get_object_or_404(Note, access_token=token)
     user_profile = get_user_profile(request)
 
+    # حماية الوصول
     if (user_profile.role == 'viewer' or 
         (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or 
         (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
         return render(request, 'notes/no_permission.html')
 
+    # استخراج باراميتر الطباعة
+    show_print = request.GET.get('print') == '1'
+
     if note.file:
         qr_data = request.build_absolute_uri(note.file.url)
-
         qr = qrcode.make(qr_data)
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
@@ -231,12 +235,13 @@ def note_qr_only(request, token):
             'img_str': qr_code_base64,
             'serial_number': note.id,
             'logo_url': request.build_absolute_uri('/static/logo.png'),
+            'show_print': show_print,  # ✅ نمرر المتغير إلى القالب
         })
     else:
-        # لا يوجد مرفق → عرض صفحة توضح ذلك
         return render(request, 'notes/no_attachment.html', {
             'note': note,
-        }) 
+        })
+
         
 import datetime
 import logging
@@ -360,10 +365,13 @@ def create_note(request):
             send_notification_email(subject, message, [request.user.email])
 
         # ✅ توجيه المستخدم إلى صفحة عرض الوثيقة
-        if note.file:
-            return redirect('note_qr_only', token=note.access_token)
-        else:
-            return redirect('note_detail', token=note.access_token)
+         # ✅ توجيه المستخدم إلى صفحة عرض الوثيقة مع أمر الطباعة
+        return redirect(f"/note-qr/{note.access_token}/?print=1")
+
+
+        
+# السطر الأخير في create_note:
+        return redirect(f"/note/{note.access_token}/?print=1")
 
     # ✅ في حالة GET (عرض النموذج)
     return render(request, 'notes/create_note.html', {

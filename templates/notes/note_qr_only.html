@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>وثيقة QR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- دعم الهاتف -->
     <style>
         body {
             font-family: 'Amiri', serif;
@@ -71,6 +72,16 @@
             font-size: 13px;
         }
     </style>
+
+    <script>
+    window.onload = function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === '1') {
+            window.print();  // ✅ طباعة فقط إذا كان print=1
+        }
+    };
+</script>
+
 </head>
 <body>
 
@@ -112,10 +123,14 @@
         </p>
 
         <!-- ✅ QR Code -->
+        {% if img_str %}
         <div class="qr-box">
             <img src="data:image/png;base64,{{ img_str }}" alt="QR Code">
             <p style="font-size: 14px; margin-top: 10px;">{{ note.access_token }}</p>
         </div>
+        {% else %}
+        <p style="color: red; text-align: center; font-weight: bold;">⚠️ رمز QR غير متوفر أو تم حذفه.</p>
+        {% endif %}
     </div>
 
     <!-- ✅ التذييل -->
