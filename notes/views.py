@@ -169,7 +169,6 @@ def home(request):
     })
 
 
-
 # ✅ عرض تفاصيل وثيقة مع QR و PDF (حماية صارمة: لا أحد يصل إلا بصلاحية)
 @login_required
 def note_detail(request, token):
