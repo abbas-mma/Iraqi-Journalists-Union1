@@ -1,13 +1,11 @@
 {% load static %}
-<img src="{% static 'images/logo.png' %}" alt="شعار اتحاد الصحفيين العراقيين"
-     class="mx-auto w-28 h-auto rounded-full shadow-md">
-
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <title>تسجيل الدخول - اتحاد الصحفيين العراقيين</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- مهم للهواتف -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -21,21 +19,30 @@
 
         .container {
             max-width: 400px;
-            margin: 80px auto;
+            width: 90%;
+            margin: 60px auto;
             background-color: #ffffff10;
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
             backdrop-filter: blur(8px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
 
-        h2 {
-            margin-bottom: 20px;
+        .logo {
+            width: 80px;
+            height: auto;
+            margin: 0 auto 15px;
+            display: block;
         }
 
-        .logo {
-            max-width: 80px;
+        .header-title {
+            font-size: 22px;
+            font-weight: bold;
             margin-bottom: 15px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
         }
 
         label {
@@ -68,10 +75,34 @@
             background-color: #1f618d;
         }
 
-        .header-title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 15px;
+        .forgot-password {
+            margin-top: 18px;
+        }
+
+        .forgot-password a {
+            color: #ffd700;
+            text-decoration: underline;
+            font-size: 15px;
+        }
+
+        /* جعل التصميم يعمل على الشاشات الصغيرة */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+                margin: 40px auto;
+            }
+
+            .header-title {
+                font-size: 18px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            .logo {
+                width: 70px;
+            }
         }
     </style>
 </head>
@@ -96,10 +127,12 @@
 
             <button type="submit">دخول</button>
         </form>
-        <div style="margin-top: 18px;">
-            <a href="{% url 'password_reset' %}" style="color:#ffd700; text-decoration:underline; font-size:15px;">هل نسيت كلمة المرور؟</a>
+
+        <div class="forgot-password">
+            <a href="{% url 'password_reset' %}">هل نسيت كلمة المرور؟</a>
         </div>
     </div>
 
 </body>
 </html>
+
