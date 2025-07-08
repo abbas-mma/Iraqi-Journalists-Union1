@@ -1,6 +1,4 @@
 {% load static %}
-<img src="{% static 'logo.png' %}" alt="شعار الاتحاد" class="h-16">
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -25,8 +23,24 @@
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors"
-    id="bodyRoot">
+<body class="bg-gray-100 min-h-screen dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors" id="bodyRoot">
+
+    <!-- ✅ الشعار في الأعلى -->
+    <div class="text-center mt-4 mb-6">
+        <img src="{% static 'logo.png' %}" alt="شعار اتحاد الصحفيين العراقيين" class="mx-auto" style="width: 120px;">
+        <h2 class="text-xl font-bold mt-2">اتحاد الصحفيين العراقيين</h2>
+        <p class="text-sm text-gray-600">المقر العام</p>
+    </div>
+
+    <!-- ✅ محتوى الصفحة المخصص -->
+    {% block content %}
+    {% endblock %}
+
+</body>
+</html>
+
+</body>
+</html>
 
     <!-- Navbar -->
     <nav class="bg-white shadow mb-8">
