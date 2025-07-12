@@ -1,11 +1,3 @@
-from imagekitio import ImageKit
-from types import SimpleNamespace
-from django.conf import settings
-imagekit = ImageKit(
-    public_key=settings.IMAGEKIT_PUBLIC_KEY,
-    private_key=settings.IMAGEKIT_PRIVATE_KEY,
-    url_endpoint=settings.IMAGEKIT_URL_ENDPOINT
-)
 
 # لوحة إحصائيات وتقارير
 from django.shortcuts import render, redirect
@@ -257,6 +249,19 @@ import logging
 logger = logging.getLogger(__name__)
 from django.urls import reverse
 from django.http import HttpResponseRedirect
+
+from imagekitio import ImageKit
+from types import SimpleNamespace
+from django.conf import settings
+import os
+
+imagekit = ImageKit(
+    public_key=os.environ.get('IMAGEKIT_PUBLIC_KEY'),
+    private_key=os.environ.get('IMAGEKIT_PRIVATE_KEY'),
+    url_endpoint=os.environ.get('IMAGEKIT_URL_ENDPOINT')
+)
+
+
 
 @login_required
 def create_note(request):
