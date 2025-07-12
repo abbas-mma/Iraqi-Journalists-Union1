@@ -84,7 +84,7 @@ class Note(models.Model):
     doc_type = models.CharField("نوع الوثيقة", max_length=20, choices=TYPE_CHOICES, default='official')
     direction = models.CharField("جهة الوثيقة", max_length=10, choices=DIRECTION_CHOICES, default='outgoing')
 
-    file = models.FileField("ملف مرفق (PDF)", upload_to='documents/', blank=True, null=True)
+    file = models.URLField("رابط الملف المرفوع", max_length=500, blank=True, null=True)
     stamp = models.ImageField("الختم", upload_to='documents/', blank=True, null=True)
     signature = models.ImageField("التوقيع", upload_to='documents/', blank=True, null=True)
     issuer_name = models.CharField("اسم الجهة المصدرة", max_length=255, blank=True, null=True)

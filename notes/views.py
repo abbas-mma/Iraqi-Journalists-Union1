@@ -1,3 +1,12 @@
+from imagekitio import ImageKit
+from types import SimpleNamespace
+from django.conf import settings
+imagekit = ImageKit(
+    public_key=settings.IMAGEKIT_PUBLIC_KEY,
+    private_key=settings.IMAGEKIT_PRIVATE_KEY,
+    url_endpoint=settings.IMAGEKIT_URL_ENDPOINT
+)
+
 # لوحة إحصائيات وتقارير
 from django.shortcuts import render, redirect
 from django.conf import settings  # type: ignore
@@ -246,6 +255,9 @@ def note_qr_only(request, token):
 import datetime
 import logging
 logger = logging.getLogger(__name__)
+from django.urls import reverse
+from django.http import HttpResponseRedirect
+
 @login_required
 def create_note(request):
     user_profile = get_user_profile(request)
@@ -273,7 +285,6 @@ def create_note(request):
         tag_ids = request.POST.getlist('tags')
         token = uuid.uuid4()
 
-        # ✅ تاريخ الانتهاء
         expiry_date_str = request.POST.get('expiry_date')
         expiry_date = None
         if expiry_date_str:
@@ -282,7 +293,30 @@ def create_note(request):
             except ValueError:
                 expiry_date = None
 
-        # ✅ إنشاء الوثيقة
+        file_url = None
+        if attachment:
+            options = SimpleNamespace(
+                folder="/notes",
+                use_unique_file_name=True,
+                is_private_file=False,
+            )
+            try:
+                result = imagekit.upload_file(
+                    file=attachment,
+                    file_name=attachment.name,
+                    options=options
+                )
+                print("ImageKit response:", result.response)
+                logger.info("✅ ImageKit رفع الملف - الاستجابة: %s", result.response)
+
+                if result.response and "url" in result.response:
+                    file_url = result.response["url"]
+                else:
+                    logger.error("❌ فشل رفع الملف إلى ImageKit: %s", result.error)
+
+            except Exception as e:
+                logger.error("❌ خطأ أثناء رفع الملف إلى ImageKit: %s", e)
+
         note = Note.objects.create(
             title=title,
             content=content,
@@ -294,7 +328,7 @@ def create_note(request):
             recipient_name=recipient_name,
             created_by=request.user,
             access_token=token,
-            file=attachment
+            file=file_url
         )
 
         if tag_ids:
@@ -303,9 +337,9 @@ def create_note(request):
 
         serial_number = note.id
 
-        # ✅ توليد QR
+        # توليد QR Code
         if note.file:
-            qr_data = request.build_absolute_uri(note.file.url)
+            qr_data = note.file
         else:
             qr_data = request.build_absolute_uri(f'/note/{token}/')
 
@@ -314,7 +348,6 @@ def create_note(request):
         qr.save(buffer, format='PNG')
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
 
-        # ✅ إعداد PDF
         font_path = "file://" + os.path.abspath(
             os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Amiri-Regular.ttf')
         ).replace("\\", "/")
@@ -342,7 +375,7 @@ def create_note(request):
         except Exception as e:
             logger.error(f"PDF generation error: {e}")
 
-        # ✅ QR Only PDF
+        # PDF يحتوي فقط على QR Code
         html_qr_only = render_to_string('notes/note_qr_only.html', {
             'note': note,
             'img_str': qr_code_base64,
@@ -358,28 +391,20 @@ def create_note(request):
         except Exception as e:
             logger.error(f"QR Only PDF error: {e}")
 
-        # ✅ إشعار بالبريد
         if request.user.email:
             subject = "تم إنشاء وثيقة جديدة"
             message = f"تم إنشاء وثيقة جديدة بعنوان: {title}"
             send_notification_email(subject, message, [request.user.email])
 
-        # ✅ توجيه المستخدم إلى صفحة عرض الوثيقة
-         # ✅ توجيه المستخدم إلى صفحة عرض الوثيقة مع أمر الطباعة
-        return redirect(f"/note-qr/{note.access_token}/?print=1")
+        url = reverse('note_qr_only', kwargs={'token': note.access_token})
+        return HttpResponseRedirect(f"{url}?print=1")
 
-
-        
-# السطر الأخير في create_note:
-        return redirect(f"/note/{note.access_token}/?print=1")
-
-    # ✅ في حالة GET (عرض النموذج)
+    # GET
     return render(request, 'notes/create_note.html', {
         'user_profile': user_profile,
         'tags': Tag.objects.all(),
     })
 
- 
 
 # ✅ عمليات الأرشفة والحذف والاسترجاع
 @login_required
