@@ -134,6 +134,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ------------------------------
 # إعدادات ImageKit لرفع الملفات الخارجية
 # ------------------------------
-IMAGEKIT_PUBLIC_KEY = "public_Lo4w922XPzcl2rpKnPFbJjJRCuE"
-IMAGEKIT_PRIVATE_KEY = "private_2d1aXLOO4ZP7rxfOM9MMnQTUegc="
-IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/journalistsunion"
+IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY", "")
+IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY", "")
+IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT", "https://ik.imagekit.io/journalistsunion/")
+
