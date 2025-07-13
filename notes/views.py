@@ -261,6 +261,18 @@ imagekit = ImageKit(
     url_endpoint=os.environ.get('IMAGEKIT_URL_ENDPOINT')
 )
 
+import os
+from imagekitio import ImageKit
+
+print("Public key:", os.environ.get('IMAGEKIT_PUBLIC_KEY'))
+print("Private key:", os.environ.get('IMAGEKIT_PRIVATE_KEY'))
+print("URL endpoint:", os.environ.get('IMAGEKIT_URL_ENDPOINT'))
+
+imagekit = ImageKit(
+    public_key=os.environ.get('IMAGEKIT_PUBLIC_KEY'),
+    private_key=os.environ.get('IMAGEKIT_PRIVATE_KEY'),
+    url_endpoint=os.environ.get('IMAGEKIT_URL_ENDPOINT')
+)
 
 
 @login_required
