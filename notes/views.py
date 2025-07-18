@@ -1,4 +1,5 @@
-
+from dotenv import load_dotenv
+load_dotenv()
 # لوحة إحصائيات وتقارير
 from django.shortcuts import render, redirect
 from django.conf import settings  # type: ignore
@@ -243,38 +244,40 @@ def note_qr_only(request, token):
             'note': note,
         })
 
-        
-import datetime
+    import datetime
 import logging
-logger = logging.getLogger(__name__)
+import os
+import uuid
+import base64
+from io import BytesIO
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-
+from django.template.loader import render_to_string
 from imagekitio import ImageKit
 from types import SimpleNamespace
 from django.conf import settings
-import os
+import qrcode
+from weasyprint import HTML
 
-imagekit = ImageKit(
-    public_key=os.environ.get('IMAGEKIT_PUBLIC_KEY'),
-    private_key=os.environ.get('IMAGEKIT_PRIVATE_KEY'),
-    url_endpoint=os.environ.get('IMAGEKIT_URL_ENDPOINT')
-)
+logger = logging.getLogger(__name__)
 
-import os
-from imagekitio import ImageKit
-
-print("Public key:", os.environ.get('IMAGEKIT_PUBLIC_KEY'))
-print("Private key:", os.environ.get('IMAGEKIT_PRIVATE_KEY'))
-print("URL endpoint:", os.environ.get('IMAGEKIT_URL_ENDPOINT'))
-
-imagekit = ImageKit(
-    public_key=os.environ.get('IMAGEKIT_PUBLIC_KEY'),
-    private_key=os.environ.get('IMAGEKIT_PRIVATE_KEY'),
-    url_endpoint=os.environ.get('IMAGEKIT_URL_ENDPOINT')
-)
-
-
+# دالة لتوليد كائن ImageKit عند الحاجة فقط
+#def get_imagekit_instance():
+   # if (settings.IMAGEKIT_PUBLIC_KEY and
+       # settings.IMAGEKIT_PRIVATE_KEY and
+       # settings.IMAGEKIT_URL_ENDPOINT):
+        #return ImageKit(
+            #public_key=settings.IMAGEKIT_PUBLIC_KEY,
+            #private_key=settings.IMAGEKIT_PRIVATE_KEY,
+           # url_endpoint=settings.IMAGEKIT_URL_ENDPOINT
+      #  )
+    #else:
+        #print("⚠️ تحذير: إعدادات ImageKit ناقصة. لم يتم التهيئة.")
+        #return None
 @login_required
 def create_note(request):
     user_profile = get_user_profile(request)
@@ -311,7 +314,14 @@ def create_note(request):
                 expiry_date = None
 
         file_url = None
-        if attachment:
+
+        # محاولة رفع الملف إلى ImageKit
+        imagekit = get_imagekit_instance()
+
+        if imagekit and attachment:
+            logger.info("محاولة رفع الملف إلى ImageKit: %s (الحجم: %d bytes)", attachment.name, attachment.size)
+            print(f"Attempting to upload file: {attachment.name}, size: {attachment.size} bytes")
+
             options = SimpleNamespace(
                 folder="/notes",
                 use_unique_file_name=True,
@@ -323,16 +333,18 @@ def create_note(request):
                     file_name=attachment.name,
                     options=options
                 )
-                print("ImageKit response:", result.response)
                 logger.info("✅ ImageKit رفع الملف - الاستجابة: %s", result.response)
+                print("ImageKit response:", result.response)
 
                 if result.response and "url" in result.response:
                     file_url = result.response["url"]
+                    logger.info("تم رفع الملف بنجاح: %s", file_url)
                 else:
                     logger.error("❌ فشل رفع الملف إلى ImageKit: %s", result.error)
 
             except Exception as e:
                 logger.error("❌ خطأ أثناء رفع الملف إلى ImageKit: %s", e)
+                print("Exception during upload:", e)
 
         note = Note.objects.create(
             title=title,
@@ -354,11 +366,7 @@ def create_note(request):
 
         serial_number = note.id
 
-        # توليد QR Code
-        if note.file:
-            qr_data = note.file
-        else:
-            qr_data = request.build_absolute_uri(f'/note/{token}/')
+        qr_data = note.file if note.file else request.build_absolute_uri(f'/note/{token}/')
 
         qr = qrcode.make(qr_data)
         buffer = BytesIO()
@@ -382,17 +390,18 @@ def create_note(request):
             'official_footer': official_footer,
         })
 
-        pdf_filename = f"{title.replace(' ', '_')}_{token}.pdf"
         pdf_dir = os.path.join(settings.MEDIA_ROOT, 'generated_pdfs')
-        pdf_path = os.path.join(pdf_dir, pdf_filename)
         os.makedirs(pdf_dir, exist_ok=True)
+
+        pdf_filename = f"{title.replace(' ', '_')}_{token}.pdf"
+        pdf_path = os.path.join(pdf_dir, pdf_filename)
 
         try:
             HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(pdf_path)
+            logger.info("تم إنشاء PDF للوثيقة: %s", pdf_path)
         except Exception as e:
             logger.error(f"PDF generation error: {e}")
 
-        # PDF يحتوي فقط على QR Code
         html_qr_only = render_to_string('notes/note_qr_only.html', {
             'note': note,
             'img_str': qr_code_base64,
@@ -405,6 +414,7 @@ def create_note(request):
 
         try:
             HTML(string=html_qr_only, base_url=request.build_absolute_uri('/')).write_pdf(qr_only_pdf_path)
+            logger.info("تم إنشاء PDF خاص بالـ QR فقط: %s", qr_only_pdf_path)
         except Exception as e:
             logger.error(f"QR Only PDF error: {e}")
 
@@ -416,12 +426,11 @@ def create_note(request):
         url = reverse('note_qr_only', kwargs={'token': note.access_token})
         return HttpResponseRedirect(f"{url}?print=1")
 
-    # GET
     return render(request, 'notes/create_note.html', {
         'user_profile': user_profile,
         'tags': Tag.objects.all(),
     })
-
+   
 
 # ✅ عمليات الأرشفة والحذف والاسترجاع
 @login_required

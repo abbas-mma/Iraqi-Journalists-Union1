@@ -1,5 +1,10 @@
+
+import os
 from pathlib import Path
-import os  # ← مهم جدًا أن يكون في الأعلى
+from dotenv import load_dotenv
+
+load_dotenv()  # ← هذا هو السطر المهم لتحميل متغيرات البيئة من ملف .env
+
 
 # ------------------------------
 # إعدادات البريد الإلكتروني
@@ -134,7 +139,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ------------------------------
 # إعدادات ImageKit لرفع الملفات الخارجية
 # ------------------------------
-IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY", "")
-IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY", "")
-IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT", "https://ik.imagekit.io/journalistsunion/")
+#IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY", "")
+#IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY", "")
+#IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT", "https://ik.imagekit.io/journalistsunion/")
 
