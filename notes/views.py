@@ -251,33 +251,18 @@ import uuid
 import base64
 from io import BytesIO
 
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
-from imagekitio import ImageKit
-from types import SimpleNamespace
 from django.conf import settings
 import qrcode
 from weasyprint import HTML
 
 logger = logging.getLogger(__name__)
 
-# دالة لتوليد كائن ImageKit عند الحاجة فقط
-#def get_imagekit_instance():
-   # if (settings.IMAGEKIT_PUBLIC_KEY and
-       # settings.IMAGEKIT_PRIVATE_KEY and
-       # settings.IMAGEKIT_URL_ENDPOINT):
-        #return ImageKit(
-            #public_key=settings.IMAGEKIT_PUBLIC_KEY,
-            #private_key=settings.IMAGEKIT_PRIVATE_KEY,
-           # url_endpoint=settings.IMAGEKIT_URL_ENDPOINT
-      #  )
-    #else:
-        #print("⚠️ تحذير: إعدادات ImageKit ناقصة. لم يتم التهيئة.")
-        #return None
 @login_required
 def create_note(request):
     user_profile = get_user_profile(request)
@@ -303,7 +288,7 @@ def create_note(request):
         recipient_name = request.POST.get('recipient_name')
         attachment = request.FILES.get('attachment')
         tag_ids = request.POST.getlist('tags')
-        token = uuid.uuid4()
+        token = str(uuid.uuid4())
 
         expiry_date_str = request.POST.get('expiry_date')
         expiry_date = None
@@ -314,37 +299,18 @@ def create_note(request):
                 expiry_date = None
 
         file_url = None
+        if attachment:
+            # حفظ الملف في MEDIA_ROOT/attachments/
+            attachments_dir = os.path.join(settings.MEDIA_ROOT, 'attachments')
+            os.makedirs(attachments_dir, exist_ok=True)
+            file_path = os.path.join(attachments_dir, attachment.name)
 
-        # محاولة رفع الملف إلى ImageKit
-        imagekit = get_imagekit_instance()
+            with open(file_path, 'wb+') as destination:
+                for chunk in attachment.chunks():
+                    destination.write(chunk)
 
-        if imagekit and attachment:
-            logger.info("محاولة رفع الملف إلى ImageKit: %s (الحجم: %d bytes)", attachment.name, attachment.size)
-            print(f"Attempting to upload file: {attachment.name}, size: {attachment.size} bytes")
-
-            options = SimpleNamespace(
-                folder="/notes",
-                use_unique_file_name=True,
-                is_private_file=False,
-            )
-            try:
-                result = imagekit.upload_file(
-                    file=attachment,
-                    file_name=attachment.name,
-                    options=options
-                )
-                logger.info("✅ ImageKit رفع الملف - الاستجابة: %s", result.response)
-                print("ImageKit response:", result.response)
-
-                if result.response and "url" in result.response:
-                    file_url = result.response["url"]
-                    logger.info("تم رفع الملف بنجاح: %s", file_url)
-                else:
-                    logger.error("❌ فشل رفع الملف إلى ImageKit: %s", result.error)
-
-            except Exception as e:
-                logger.error("❌ خطأ أثناء رفع الملف إلى ImageKit: %s", e)
-                print("Exception during upload:", e)
+            # رابط الوصول للملف (حسب إعدادات MEDIA_URL)
+            file_url = settings.MEDIA_URL + 'attachments/' + attachment.name
 
         note = Note.objects.create(
             title=title,
@@ -357,7 +323,7 @@ def create_note(request):
             recipient_name=recipient_name,
             created_by=request.user,
             access_token=token,
-            file=file_url
+            file=file_url  # تأكد أن حقل file في الموديل يستقبل URL أو مسار نصي
         )
 
         if tag_ids:
@@ -430,7 +396,7 @@ def create_note(request):
         'user_profile': user_profile,
         'tags': Tag.objects.all(),
     })
-   
+
 
 # ✅ عمليات الأرشفة والحذف والاسترجاع
 @login_required
