@@ -1,10 +1,21 @@
-
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()  # ← هذا هو السطر المهم لتحميل متغيرات البيئة من ملف .env
+load_dotenv()  # تحميل متغيرات البيئة من ملف .env
 
+# ------------------------------
+# المسار الأساسي للمشروع
+# ------------------------------
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# ------------------------------
+# الإعدادات الأمنية
+# ------------------------------
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-1234567890')
+DEBUG = False  # يجب أن يكون False في بيئة الإنتاج
+
+ALLOWED_HOSTS = ['abbas114.pythonanywhere.com']  # ← استبدل باسم نطاقك في PythonAnywhere
 
 # ------------------------------
 # إعدادات البريد الإلكتروني
@@ -18,18 +29,6 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'your_app_password')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # ------------------------------
-# المسار الأساسي للمشروع
-# ------------------------------
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# ------------------------------
-# الإعدادات الأمنية
-# ------------------------------
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-1234567890')
-DEBUG = os.environ.get('RENDER', None) is None  # False على استضافة Render
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
-
-# ------------------------------
 # التطبيقات المثبتة
 # ------------------------------
 INSTALLED_APPS = [
@@ -39,15 +38,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'notes.apps.NotesConfig',  # ← لتفعيل الـ signals داخل app notes
+    'notes.apps.NotesConfig',
 ]
 
 # ------------------------------
-# الوسيطات (Middleware)
+# الوسيطات
 # ------------------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise في الأعلى
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise لتقديم ملفات static
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -62,12 +61,12 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'project.urls'
 
 # ------------------------------
-# إعدادات القوالب (Templates)
+# إعدادات القوالب
 # ------------------------------
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # مجلد القوالب العام
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -86,12 +85,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'project.wsgi.application'
 
 # ------------------------------
-# إعدادات قاعدة البيانات
+# إعدادات قاعدة البيانات (SQLite)
 # ------------------------------
 import dj_database_url
+
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', f'sqlite:///{BASE_DIR}/db.sqlite3'),
+        default=f'sqlite:///{BASE_DIR}/db.sqlite3',
         conn_max_age=600,
         ssl_require=False
     )
@@ -111,15 +111,15 @@ USE_I18N = True
 USE_TZ = True
 
 # ------------------------------
-# إعدادات الملفات الثابتة (Static files - CSS, JS, Images)
+# إعدادات الملفات الثابتة
 # ------------------------------
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ------------------------------
-# إعدادات ملفات الوسائط (Media files - PDF, Images...)
+# إعدادات ملفات الوسائط
 # ------------------------------
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -129,7 +129,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # ------------------------------
 LOGIN_URL = '/accounts/login/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = 'home'  # بعد تسجيل الدخول
+LOGIN_REDIRECT_URL = 'home'
 
 # ------------------------------
 # الحقل الافتراضي لنماذج Django
@@ -137,9 +137,8 @@ LOGIN_REDIRECT_URL = 'home'  # بعد تسجيل الدخول
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ------------------------------
-# إعدادات ImageKit لرفع الملفات الخارجية
+# تعطيل ImageKit مؤقتًا
 # ------------------------------
-#IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY", "")
-#IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY", "")
-#IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT", "https://ik.imagekit.io/journalistsunion/")
-
+# IMAGEKIT_PUBLIC_KEY = ''
+# IMAGEKIT_PRIVATE_KEY = ''
+# IMAGEKIT_URL_ENDPOINT = ''
