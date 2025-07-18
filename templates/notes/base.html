@@ -2,7 +2,6 @@
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}لوحة التحكم{% endblock %}</title>
@@ -14,8 +13,8 @@
         }
     </style>
 </head>
-
 <body class="bg-gray-100 text-gray-800">
+
     <!-- ✅ الشريط العلوي -->
     <nav class="bg-white shadow-md fixed top-0 right-0 left-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
@@ -24,20 +23,20 @@
                 <img src="{% static 'images/logo.png' %}" class="h-10" alt="شعار الاتحاد">
                 <span class="text-xl font-bold text-blue-800">اتحاد الصحفيين العراقيين</span>
             </div>
-            
-            <!-- 🔍 شريط البحث -->
+
+            <!-- شريط البحث -->
             <form action="{% url 'home' %}" method="get" class="hidden md:block">
                 <input type="text" name="q" placeholder="ابحث عن وثيقة..."
                     class="rounded-lg px-4 py-1 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </form>
 
-            <!-- ✅ زر إنشاء وثيقة واضح -->
+            <!-- زر إنشاء وثيقة -->
             <a href="{% url 'create_note' %}"
                 class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md ml-2">
                 ➕ إنشاء وثيقة
             </a>
 
-            <!-- ☰ قائمة المستخدم -->
+            <!-- قائمة المستخدم -->
             <div class="relative inline-block text-left">
                 <button onclick="toggleMenu()"
                     class="flex items-center px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800">
@@ -55,6 +54,8 @@
                     <a href="{% url 'user_notes' %}" class="block px-4 py-2 hover:bg-gray-100">📝 وثائقي</a>
                     <a href="{% url 'search_log' %}" class="block px-4 py-2 hover:bg-gray-100">🔍 سجل البحث</a>
                     <a href="{% url 'archive_log' %}" class="block px-4 py-2 hover:bg-gray-100">🗃 سجل الأرشفة</a>
+                    <a href="{% url 'activity_log' %}" class="block px-4 py-2 hover:bg-gray-100">🧾 سجل النشاط</a>
+                    <a href="{% url 'notifications' %}" class="block px-4 py-2 hover:bg-gray-100">🔔 الإشعارات</a>
                     <hr class="my-1">
                     <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-gray-100">🚪 تسجيل الخروج</a>
                 </div>
@@ -62,8 +63,15 @@
         </div>
     </nav>
 
+    <!-- ✅ التحذير الأمني العام -->
+    {% if security_warning %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-5xl mx-auto mt-24 mb-4">
+            ⚠️ {{ security_warning.text }}
+        </div>
+    {% endif %}
+
     <!-- ✅ محتوى الصفحة -->
-    <div class="pt-24 px-6 max-w-7xl mx-auto">
+    <div class="pt-6 px-6 max-w-7xl mx-auto">
         {% block content %}
         {% endblock %}
     </div>
@@ -85,5 +93,4 @@
     </script>
 
 </body>
-
 </html>

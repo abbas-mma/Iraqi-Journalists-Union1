@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}سجل النشاط{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <h2 class="text-2xl font-bold text-center mb-6">🧾 سجل النشاط</h2>
+
+    {% if logs %}
+        <table class="w-full bg-white dark:bg-gray-800 shadow rounded overflow-hidden text-right">
+            <thead class="bg-gray-100 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                <tr>
+                    <th class="px-4 py-2">المستخدم</th>
+                    <th class="px-4 py-2">العملية</th>
+                    <th class="px-4 py-2">الوثيقة</th>
+                    <th class="px-4 py-2">الوقت</th>
+                    <th class="px-4 py-2">IP</th>
+                    <th class="px-4 py-2">المتصفح</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm">
+                {% for log in logs %}
+                <tr class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="px-4 py-2">{{ log.user.username }}</td>
+                    <td class="px-4 py-2">{{ log.action }}</td>
+                    <td class="px-4 py-2">
+                        {% if log.note %}
+                            <a href="{% url 'note_detail' log.note.access_token %}" class="text-blue-600 hover:underline">
+                                {{ log.note.title|truncatechars:30 }}
+                            </a>
+                        {% else %}
+                            <span class="text-gray-400">غير متوفرة</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-2">{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                    <td class="px-4 py-2 text-gray-600">{{ log.ip_address|default:"—" }}</td>
+                    <td class="px-4 py-2 text-gray-500">{{ log.user_agent|truncatechars:40 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="text-center text-gray-500 py-12">لا توجد نشاطات مسجلة.</div>
+    {% endif %}
+
+</div>
+{% endblock %}

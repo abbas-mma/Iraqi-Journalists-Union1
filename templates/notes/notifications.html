@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}الإشعارات{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <h2 class="text-2xl font-bold text-center mb-6">🔔 الإشعارات</h2>
+
+    {% if notifications %}
+        <ul class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 rounded shadow overflow-hidden">
+            {% for notify in notifications %}
+            <li class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-800 dark:text-gray-100">
+                            👤 {{ notify.user.username if notify.user else "مستخدم مجهول" }} 
+                            فتح {{ notify.get_access_type_display }} 
+                            بتاريخ <strong>{{ notify.accessed_at|date:"Y-m-d H:i" }}</strong>
+                        </p>
+                        {% if notify.ip_address %}
+                        <p class="text-xs text-gray-500 mt-1">IP: {{ notify.ip_address }}</p>
+                        {% endif %}
+                        {% if notify.user_agent %}
+                        <p class="text-xs text-gray-400">المتصفح: {{ notify.user_agent|truncatechars:80 }}</p>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'note_detail' notify.note.access_token %}" class="text-blue-600 hover:underline">عرض الوثيقة</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="text-center text-gray-500 py-12">لا توجد إشعارات حالياً.</div>
+    {% endif %}
+</div>
+{% endblock %}

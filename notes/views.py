@@ -168,25 +168,63 @@ def home(request):
         'stats': stats,
         'now': now,
         'request': request,
-    })
+     })
+                  
+import uuid
+import datetime
+import base64
+import logging
+from io import BytesIO
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.urls import reverse
+from django.http import HttpResponseRedirect, FileResponse, HttpResponseForbidden
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings
+
+import qrcode
+from weasyprint import HTML
+
+from .models import Note, Tag, SecurityWarning, User, UserProfile, AccessLog
+
+logger = logging.getLogger(__name__)
 
 
-# ✅ عرض تفاصيل وثيقة مع QR و PDF (حماية صارمة: لا أحد يصل إلا بصلاحية)
-# ✅ عرض تفاصيل وثيقة مع QR
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+def get_user_profile(request):
+    return UserProfile.objects.get(user=request.user)
+
+
+def log_access(user, note, action, ip):
+    AccessLog.objects.create(user=user, note=note, action=action, ip_address=ip)
+
+
 @login_required
 def note_detail(request, token):
     note = get_object_or_404(Note, access_token=token)
     user_profile = get_user_profile(request)
+    ip = get_client_ip(request)
 
-    # حماية صارمة
-    if (user_profile.role == 'viewer' or 
-        (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or 
+    if (user_profile.role == 'viewer' or
+        (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or
         (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
         return render(request, 'notes/no_permission.html')
 
-    # QR فقط إذا يوجد مرفق
+    log_access(request.user, note, 'view_note', ip)
+
     if note.file:
-        qr_data = request.build_absolute_uri(note.file.url)
+        qr_data = request.build_absolute_uri(reverse('protected_file', args=[note.id]))
         attachment_url = qr_data
 
         qr = qrcode.make(qr_data)
@@ -210,23 +248,23 @@ def note_detail(request, token):
     })
 
 
-# ✅ صفحة QR فقط - تعرض صورة QR إن وُجد مرفق، وإلا تعرض رسالة
 @login_required
 def note_qr_only(request, token):
     note = get_object_or_404(Note, access_token=token)
     user_profile = get_user_profile(request)
+    ip = get_client_ip(request)
 
-    # حماية الوصول
-    if (user_profile.role == 'viewer' or 
-        (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or 
+    if (user_profile.role == 'viewer' or
+        (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or
         (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
         return render(request, 'notes/no_permission.html')
 
-    # استخراج باراميتر الطباعة
+    log_access(request.user, note, 'view_qr', ip)
+
     show_print = request.GET.get('print') == '1'
 
     if note.file:
-        qr_data = request.build_absolute_uri(note.file.url)
+        qr_data = request.build_absolute_uri(reverse('protected_file', args=[note.id]))
         qr = qrcode.make(qr_data)
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
@@ -237,38 +275,42 @@ def note_qr_only(request, token):
             'img_str': qr_code_base64,
             'serial_number': note.id,
             'logo_url': request.build_absolute_uri('/static/logo.png'),
-            'show_print': show_print,  # ✅ نمرر المتغير إلى القالب
+            'show_print': show_print,
         })
     else:
-        return render(request, 'notes/no_attachment.html', {
-            'note': note,
-        })
+        return render(request, 'notes/no_attachment.html', {'note': note})
 
-    import datetime
-import logging
-import os
-import uuid
-import base64
-from io import BytesIO
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from django.urls import reverse
-from django.http import HttpResponseRedirect
-from django.template.loader import render_to_string
-from django.conf import settings
-import qrcode
-from weasyprint import HTML
+@login_required
+def protected_file(request, note_id):
+    note = get_object_or_404(Note, id=note_id)
+    user_profile = get_user_profile(request)
+    ip = get_client_ip(request)
 
-logger = logging.getLogger(__name__)
+    if (user_profile.role == 'viewer' or
+        (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or
+        (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
+        return HttpResponseForbidden("لا تملك صلاحية الوصول إلى هذا الملف")
+
+    if not note.file:
+        return HttpResponseForbidden("لا يوجد ملف مرفق")
+
+    log_access(request.user, note, 'download_attachment', ip)
+
+    file_path = note.file.path if hasattr(note.file, 'path') else os.path.join(settings.MEDIA_ROOT, note.file.name)
+    if not os.path.exists(file_path):
+        return HttpResponseForbidden("الملف غير موجود")
+
+    response = FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
+    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+    return response
+
 
 @login_required
 def create_note(request):
     user_profile = get_user_profile(request)
 
     if user_profile.role not in ['admin', 'supervisor', 'employee']:
-        from django.core.mail import send_mail
         send_mail(
             subject="محاولة إنشاء وثيقة بدون صلاحية",
             message=f"المستخدم: {request.user.username} ({request.user.email})\nنوع الحساب: {user_profile.get_role_display()}\nتاريخ ووقت المحاولة: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}",
@@ -300,7 +342,6 @@ def create_note(request):
 
         file_url = None
         if attachment:
-            # حفظ الملف في MEDIA_ROOT/attachments/
             attachments_dir = os.path.join(settings.MEDIA_ROOT, 'attachments')
             os.makedirs(attachments_dir, exist_ok=True)
             file_path = os.path.join(attachments_dir, attachment.name)
@@ -309,8 +350,7 @@ def create_note(request):
                 for chunk in attachment.chunks():
                     destination.write(chunk)
 
-            # رابط الوصول للملف (حسب إعدادات MEDIA_URL)
-            file_url = settings.MEDIA_URL + 'attachments/' + attachment.name
+            file_url = 'attachments/' + attachment.name
 
         note = Note.objects.create(
             title=title,
@@ -323,7 +363,7 @@ def create_note(request):
             recipient_name=recipient_name,
             created_by=request.user,
             access_token=token,
-            file=file_url  # تأكد أن حقل file في الموديل يستقبل URL أو مسار نصي
+            file=file_url
         )
 
         if tag_ids:
@@ -332,16 +372,14 @@ def create_note(request):
 
         serial_number = note.id
 
-        qr_data = note.file if note.file else request.build_absolute_uri(f'/note/{token}/')
+        qr_data = request.build_absolute_uri(reverse('protected_file', args=[note.id])) if note.file else request.build_absolute_uri(f'/note/{token}/')
 
         qr = qrcode.make(qr_data)
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
 
-        font_path = "file://" + os.path.abspath(
-            os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Amiri-Regular.ttf')
-        ).replace("\\", "/")
+        font_path = "file://" + os.path.abspath(os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Amiri-Regular.ttf')).replace("\\", "/")
 
         official_footer = "هذه الوثيقة صادرة إلكترونياً من اتحاد الصحفيين العراقيين ولا تحتاج توقيعاً أو ختم ورقي."
 
@@ -358,7 +396,6 @@ def create_note(request):
 
         pdf_dir = os.path.join(settings.MEDIA_ROOT, 'generated_pdfs')
         os.makedirs(pdf_dir, exist_ok=True)
-
         pdf_filename = f"{title.replace(' ', '_')}_{token}.pdf"
         pdf_path = os.path.join(pdf_dir, pdf_filename)
 
@@ -377,7 +414,6 @@ def create_note(request):
 
         qr_only_pdf_filename = f"qr_only_{token}.pdf"
         qr_only_pdf_path = os.path.join(pdf_dir, qr_only_pdf_filename)
-
         try:
             HTML(string=html_qr_only, base_url=request.build_absolute_uri('/')).write_pdf(qr_only_pdf_path)
             logger.info("تم إنشاء PDF خاص بالـ QR فقط: %s", qr_only_pdf_path)
@@ -387,7 +423,7 @@ def create_note(request):
         if request.user.email:
             subject = "تم إنشاء وثيقة جديدة"
             message = f"تم إنشاء وثيقة جديدة بعنوان: {title}"
-            send_notification_email(subject, message, [request.user.email])
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [request.user.email], fail_silently=True)
 
         url = reverse('note_qr_only', kwargs={'token': note.access_token})
         return HttpResponseRedirect(f"{url}?print=1")
@@ -397,7 +433,8 @@ def create_note(request):
         'tags': Tag.objects.all(),
     })
 
-
+    
+    
 # ✅ عمليات الأرشفة والحذف والاسترجاع
 @login_required
 def archive_note(request, note_id):
@@ -656,3 +693,27 @@ def note_official_pdf(request, token):
         return HttpResponse("خطأ في توليد ملف PDF", status=500)
 
     return redirect(f"{settings.MEDIA_URL}generated_pdfs/{pdf_filename}")
+from .models import AccessNotification, ActivityLog
+
+def notifications_view(request):
+    notifications = AccessNotification.objects.order_by('-accessed_at')[:50]
+    return render(request, 'notifications.html', {
+        'notifications': notifications,
+        'notifications_unread_count': notifications.count()  # أو فلتر unread لو فيه
+    })
+
+def activity_log_view(request):
+    logs = ActivityLog.objects.select_related('user', 'note').order_by('-timestamp')[:100]
+    return render(request, 'activity_log.html', {
+        'logs': logs
+    })
+    from django.contrib.auth.decorators import user_passes_test
+
+@user_passes_test(lambda u: u.is_superuser or u.userprofile.role in ['admin', 'supervisor'])
+def access_log(request):
+    logs = AccessLog.objects.select_related('user', 'note').order_by('-timestamp')[:100]
+    return render(request, 'notes/access_log.html', {
+        'logs': logs,
+        'user_profile': get_user_profile(request),
+    })
+
