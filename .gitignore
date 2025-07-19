@@ -44,3 +44,4 @@ npm-debug.log
 # Others
 *.bak
 *.orig
+db.sqlite3
