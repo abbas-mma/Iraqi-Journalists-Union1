@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>وثيقة QR</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- دعم الهاتف -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: 'Amiri', serif;
@@ -77,10 +77,10 @@
     window.onload = function () {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('print') === '1') {
-            window.print();  // ✅ طباعة فقط إذا كان print=1
+            window.print();
         }
     };
-</script>
+    </script>
 
 </head>
 <body>
@@ -117,12 +117,10 @@
             <strong>وثيقة خاصة لا يمكن قراءتها إلا بحساب من الاتحاد</strong>
         </p>
 
-        <!-- ✅ فترة الاستخدام -->
         <p style="text-align: center; font-size: 15px; margin-bottom: 10px;">
             فترة استخدام الوثيقة مرتبطة بتاريخ رمز التحقق
         </p>
 
-        <!-- ✅ QR Code -->
         {% if img_str %}
         <div class="qr-box">
             <img src="data:image/png;base64,{{ img_str }}" alt="QR Code">
@@ -136,7 +134,9 @@
     <!-- ✅ التذييل -->
     <div class="footer">
         في حال حدوث تلكؤ أو مشكلة في قراءة الرمز السريع، يرجى التواصل مع الدعم الفني للاتحاد.<br>
-        <strong>{{ site_url }}</strong> | <strong>0771214328</strong>
+        <strong>{{ site_url }}</strong> | <strong>0771214328</strong><br><br>
+        <strong>رئيس اتحاد الصحفيين العراقيين</strong><br>
+        <strong>مظفر عبد المجيد المحمداوي</strong>
     </div>
 
 </body>

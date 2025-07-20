@@ -8,13 +8,25 @@
 <!-- ✅ عنوان الصفحة -->
 <h1 class="text-2xl font-bold mb-4 text-blue-900">📊 لوحة التحكم الرئيسية</h1>
 
-<!-- ✅ أزرار الإدارة -->
+<!-- ✅ أزرار إدارة الوثائق والمستخدمين -->
 <div class="flex flex-wrap gap-3 mb-6">
     <a href="{% url 'create_note' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">➕ إنشاء وثيقة</a>
     <a href="{% url 'archived_notes' %}" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">🗂 الأرشيف</a>
-    <a href="{% url 'notifications' %}" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">🔔 الإشعارات</a>
-    <a href="{% url 'user_management' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">👥 المستخدمون</a>
-    <a href="{% url 'stats_dashboard' %}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">📈 الإحصائيات</a>
+    <a href="{% url 'expired_notes' %}" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">📅 المنتهية</a>
+    <a href="{% url 'outgoing_notes' %}" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 الصادرة</a>
+    <a href="{% url 'incoming_notes' %}" class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">📥 الواردة</a>
+    <a href="{% url 'user_management' %}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">👥 المستخدمون</a>
+    <a href="{% url 'stats_dashboard' %}" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-black">📈 الإحصائيات</a>
+</div>
+
+<!-- ✅ أزرار السجلات والأنشطة -->
+<div class="flex flex-wrap gap-3 mb-6">
+    <a href="{% url 'search_log' %}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">🔍 سجل البحث</a>
+    <a href="{% url 'archive_log' %}" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">🗂 سجل الأرشفة</a>
+    <a href="{% url 'login_history' %}" class="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-900">🕓 سجل الدخول</a>
+    <a href="{% url 'role_change_log' %}" class="bg-yellow-800 text-white px-4 py-2 rounded hover:bg-yellow-900">🛠 تغيير الأدوار</a>
+    <a href="{% url 'activity_log' %}" class="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-800">📊 سجل الأنشطة</a>
+    <a href="{% url 'access_log' %}" class="bg-teal-700 text-white px-4 py-2 rounded hover:bg-teal-800">📜 سجل الوصول</a>
 </div>
 
 <!-- ✅ إحصائيات -->

@@ -257,7 +257,6 @@ from django.utils import timezone
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
-from imagekitio import ImageKit
 from types import SimpleNamespace
 from django.conf import settings
 import qrcode
@@ -265,34 +264,12 @@ from weasyprint import HTML
 
 logger = logging.getLogger(__name__)
 
-# دالة لتوليد كائن ImageKit عند الحاجة فقط
-def get_imagekit_instance():
-    if (settings.IMAGEKIT_PUBLIC_KEY and
-        settings.IMAGEKIT_PRIVATE_KEY and
-        settings.IMAGEKIT_URL_ENDPOINT):
-        return ImageKit(
-            public_key=settings.IMAGEKIT_PUBLIC_KEY,
-            private_key=settings.IMAGEKIT_PRIVATE_KEY,
-            url_endpoint=settings.IMAGEKIT_URL_ENDPOINT
-        )
-    else:
-        print("⚠️ تحذير: إعدادات ImageKit ناقصة. لم يتم التهيئة.")
-        return None
-
 @login_required
 def create_note(request):
     user_profile = get_user_profile(request)
 
     if user_profile.role not in ['admin', 'supervisor', 'employee']:
-        from django.core.mail import send_mail
-        send_mail(
-            subject="محاولة إنشاء وثيقة بدون صلاحية",
-            message=f"المستخدم: {request.user.username} ({request.user.email})\nنوع الحساب: {user_profile.get_role_display()}\nتاريخ ووقت المحاولة: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[admin.email for admin in User.objects.filter(is_superuser=True)],
-            fail_silently=True
-        )
-        return render(request, 'notes/no_permission.html', {'user_profile': user_profile})
+        return render(request, 'notes/no_permission.html')
 
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -307,46 +284,20 @@ def create_note(request):
         token = uuid.uuid4()
 
         expiry_date_str = request.POST.get('expiry_date')
-        expiry_date = None
-        if expiry_date_str:
-            try:
-                expiry_date = datetime.datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                expiry_date = None
+        expiry_date = datetime.datetime.strptime(expiry_date_str, '%Y-%m-%d') if expiry_date_str else None
 
+        # حفظ المرفق في media/attachments/
         file_url = None
+        if attachment:
+            attachment_name = f"{uuid.uuid4()}_{attachment.name}"
+            attachment_path = os.path.join(settings.MEDIA_ROOT, 'attachments', attachment_name)
+            os.makedirs(os.path.dirname(attachment_path), exist_ok=True)
+            with open(attachment_path, 'wb+') as destination:
+                for chunk in attachment.chunks():
+                    destination.write(chunk)
+            file_url = f"{settings.MEDIA_URL}attachments/{attachment_name}"
 
-        # محاولة رفع الملف إلى ImageKit
-        imagekit = get_imagekit_instance()
-
-        if imagekit and attachment:
-            logger.info("محاولة رفع الملف إلى ImageKit: %s (الحجم: %d bytes)", attachment.name, attachment.size)
-            print(f"Attempting to upload file: {attachment.name}, size: {attachment.size} bytes")
-
-            options = SimpleNamespace(
-                folder="/notes",
-                use_unique_file_name=True,
-                is_private_file=False,
-            )
-            try:
-                result = imagekit.upload_file(
-                    file=attachment,
-                    file_name=attachment.name,
-                    options=options
-                )
-                logger.info("✅ ImageKit رفع الملف - الاستجابة: %s", result.response)
-                print("ImageKit response:", result.response)
-
-                if result.response and "url" in result.response:
-                    file_url = result.response["url"]
-                    logger.info("تم رفع الملف بنجاح: %s", file_url)
-                else:
-                    logger.error("❌ فشل رفع الملف إلى ImageKit: %s", result.error)
-
-            except Exception as e:
-                logger.error("❌ خطأ أثناء رفع الملف إلى ImageKit: %s", e)
-                print("Exception during upload:", e)
-
+        # إنشاء الوثيقة
         note = Note.objects.create(
             title=title,
             content=content,
@@ -365,10 +316,8 @@ def create_note(request):
             tags = Tag.objects.filter(id__in=tag_ids)
             note.tags.set(tags)
 
-        serial_number = note.id
-
-        qr_data = note.file if note.file else request.build_absolute_uri(f'/note/{token}/')
-
+        # إنشاء QR
+        qr_data = file_url or request.build_absolute_uri(f'/note/{token}/')
         qr = qrcode.make(qr_data)
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
@@ -378,60 +327,48 @@ def create_note(request):
             os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Amiri-Regular.ttf')
         ).replace("\\", "/")
 
-        official_footer = "هذه الوثيقة صادرة إلكترونياً من اتحاد الصحفيين العراقيين ولا تحتاج توقيعاً أو ختم ورقي."
-
         html_content = render_to_string('notes/note_print.html', {
             'note': note,
-            'user_profile': user_profile,
             'img_str': qr_code_base64,
-            'security_warning': SecurityWarning.objects.first(),
-            'logo_url': request.build_absolute_uri('/static/logo.png'),
             'font_path': font_path,
-            'serial_number': serial_number,
-            'official_footer': official_footer,
+            'logo_url': request.build_absolute_uri('/static/logo.png'),
+            'serial_number': note.id,
+            'official_footer': "هذه الوثيقة صادرة إلكترونياً من اتحاد الصحفيين العراقيين ولا تحتاج توقيعاً أو ختم ورقي.",
         })
 
+        # حفظ PDF محليًا
         pdf_dir = os.path.join(settings.MEDIA_ROOT, 'generated_pdfs')
         os.makedirs(pdf_dir, exist_ok=True)
+        pdf_path = os.path.join(pdf_dir, f"{title.replace(' ', '_')}_{token}.pdf")
+        HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(pdf_path)
 
-        pdf_filename = f"{title.replace(' ', '_')}_{token}.pdf"
-        pdf_path = os.path.join(pdf_dir, pdf_filename)
-
-        try:
-            HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(pdf_path)
-            logger.info("تم إنشاء PDF للوثيقة: %s", pdf_path)
-        except Exception as e:
-            logger.error(f"PDF generation error: {e}")
-
+        # إنشاء نسخة PDF للـ QR فقط
         html_qr_only = render_to_string('notes/note_qr_only.html', {
             'note': note,
             'img_str': qr_code_base64,
-            'serial_number': serial_number,
+            'serial_number': note.id,
             'logo_url': request.build_absolute_uri('/static/logo.png'),
         })
+        qr_only_pdf_path = os.path.join(pdf_dir, f"qr_only_{token}.pdf")
+        HTML(string=html_qr_only, base_url=request.build_absolute_uri('/')).write_pdf(qr_only_pdf_path)
 
-        qr_only_pdf_filename = f"qr_only_{token}.pdf"
-        qr_only_pdf_path = os.path.join(pdf_dir, qr_only_pdf_filename)
-
-        try:
-            HTML(string=html_qr_only, base_url=request.build_absolute_uri('/')).write_pdf(qr_only_pdf_path)
-            logger.info("تم إنشاء PDF خاص بالـ QR فقط: %s", qr_only_pdf_path)
-        except Exception as e:
-            logger.error(f"QR Only PDF error: {e}")
-
+        # إشعار بالبريد
         if request.user.email:
-            subject = "تم إنشاء وثيقة جديدة"
-            message = f"تم إنشاء وثيقة جديدة بعنوان: {title}"
-            send_notification_email(subject, message, [request.user.email])
+            send_mail(
+                "تم إنشاء وثيقة جديدة",
+                f"تم إنشاء وثيقة جديدة بعنوان: {title}",
+                settings.DEFAULT_FROM_EMAIL,
+                [request.user.email],
+                fail_silently=True
+            )
 
-        url = reverse('note_qr_only', kwargs={'token': note.access_token})
-        return HttpResponseRedirect(f"{url}?print=1")
+        return redirect(f"/note/{token}/qr_only/?print=1")
 
     return render(request, 'notes/create_note.html', {
         'user_profile': user_profile,
         'tags': Tag.objects.all(),
     })
-   
+
 
 # ✅ عمليات الأرشفة والحذف والاسترجاع
 @login_required
@@ -691,3 +628,27 @@ def note_official_pdf(request, token):
         return HttpResponse("خطأ في توليد ملف PDF", status=500)
 
     return redirect(f"{settings.MEDIA_URL}generated_pdfs/{pdf_filename}")
+
+    from .models import ActivityLog
+from django.contrib.auth.decorators import user_passes_test
+
+@user_passes_test(lambda u: u.is_superuser or u.userprofile.role in ['admin', 'supervisor'])
+def activity_log_view(request):
+    logs = ActivityLog.objects.select_related('user').order_by('-timestamp')[:200]
+    return render(request, 'notes/activity_log.html', {'logs': logs})
+from .models import AccessLog
+from django.contrib.admin.views.decorators import staff_member_required
+
+def log_access(request, note, action):
+    ip = request.META.get('REMOTE_ADDR')
+    AccessLog.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        note=note,
+        action=action,
+        ip_address=ip
+    )
+
+@staff_member_required
+def access_log(request):
+    logs = AccessLog.objects.select_related('note', 'user').order_by('-timestamp')[:100]
+    return render(request, 'notes/access_log.html', {'logs': logs})

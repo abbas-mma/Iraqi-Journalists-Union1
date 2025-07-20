@@ -3,15 +3,13 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-
     # ✅ الصفحة الرئيسية
     path('', views.home, name='home'),
 
-    # ✅ الوثائق: عرض، تفاصيل، QR، PDF، تنزيل المرفقات
+    # ✅ الوثائق: عرض، تفاصيل، QR، PDF
     path('note/<uuid:token>/', views.note_detail, name='note_detail'),
     path('note/<uuid:token>/qr_only/', views.note_qr_only, name='note_qr_only'),
     path('note/<uuid:token>/official-pdf/', views.note_official_pdf, name='note_official_pdf'),
-    path('protected-file/<int:note_id>/', views.protected_file, name='protected_file'),  # ✅ مسار تحميل الملفات الآمن
 
     # ✅ الوصول عبر QR
     path('qr/<uuid:token>/', views.qr_note_access, name='qr_note_access'),
@@ -58,4 +56,3 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
     path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='password_reset_done.html'), name='password_reset_done'),
 ]
-

@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
+from django.utils import timezone
+
 
 class UserProfile(models.Model):
     ROLE_CHOICES = [
@@ -68,8 +70,70 @@ class Note(models.Model):
 
 
 class SecurityWarning(models.Model):
-    message = models.TextField("رسالة التحذير الأمني")
-    created_at = models.DateTimeField(auto_now_add=True)
+    message = models.TextField("رسالة التحذير الأمني", default='')  # ✅ تم إضافة default مؤقتًا
+    created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.message[:50]
+
+
+class RoleChangeLog(models.Model):
+    changed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='role_changes_made')
+    changed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='role_changes_received')
+    old_role = models.CharField(max_length=50)
+    new_role = models.CharField(max_length=50)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.changed_by} → {self.changed_user} ({self.old_role} → {self.new_role})"
+
+
+class LoginHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    login_time = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.login_time}"
+
+
+class Attachment(models.Model):
+    note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to='attachments/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.note.title} - {self.file.name}"
+
+
+class AccessLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    note = models.ForeignKey(Note, on_delete=models.CASCADE)
+    action = models.CharField(max_length=255)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.action} - {self.note.title}"
+
+
+class ActivityLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    action = models.CharField(max_length=255)
+    note = models.ForeignKey(Note, on_delete=models.CASCADE, blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.action}"
+
+
+class AccessNotification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    note = models.ForeignKey(Note, on_delete=models.CASCADE)
+    access_type = models.CharField(max_length=255)
+    accessed_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.access_type} - {self.note.title}"
