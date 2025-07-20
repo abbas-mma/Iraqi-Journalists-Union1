@@ -65,3 +65,11 @@ class Note(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class SecurityWarning(models.Model):
+    message = models.TextField("رسالة التحذير الأمني")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.message[:50]

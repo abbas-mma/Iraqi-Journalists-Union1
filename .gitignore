@@ -1,4 +1,4 @@
-# Python
+# Python cache and compiled files
 __pycache__/
 *.py[cod]
 *.pyo
@@ -10,10 +10,9 @@ venv/
 .env/
 .venv/
 
-# Django stuff:
+# Django stuff
 *.log
 *.pot
-*.pyc
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -26,22 +25,25 @@ staticfiles/
 # macOS
 .DS_Store
 
-# Render & deployment
-*.sqlite3
+# Deployment and environment files
 .env
 .env.local
 .env.production
 .env.example
 
-# Compiled files
+# SQLite database
+*.sqlite3
+
+# Compiled translation files
 *.mo
+
+# Swap files (vim, etc.)
 *.swp
 
-# Node and frontend cache
+# Node.js dependencies and logs
 node_modules/
 npm-debug.log
 
-# Others
+# Backup and original files
 *.bak
 *.orig
-db.sqlite3
