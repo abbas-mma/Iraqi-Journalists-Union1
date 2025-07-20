@@ -286,18 +286,7 @@ def create_note(request):
         expiry_date_str = request.POST.get('expiry_date')
         expiry_date = datetime.datetime.strptime(expiry_date_str, '%Y-%m-%d') if expiry_date_str else None
 
-        # حفظ المرفق في media/attachments/
-        file_url = None
-        if attachment:
-            attachment_name = f"{uuid.uuid4()}_{attachment.name}"
-            attachment_path = os.path.join(settings.MEDIA_ROOT, 'attachments', attachment_name)
-            os.makedirs(os.path.dirname(attachment_path), exist_ok=True)
-            with open(attachment_path, 'wb+') as destination:
-                for chunk in attachment.chunks():
-                    destination.write(chunk)
-            file_url = f"{settings.MEDIA_URL}attachments/{attachment_name}"
-
-        # إنشاء الوثيقة
+        # إنشاء الوثيقة وتخزين المرفق مباشرة
         note = Note.objects.create(
             title=title,
             content=content,
@@ -309,15 +298,15 @@ def create_note(request):
             recipient_name=recipient_name,
             created_by=request.user,
             access_token=token,
-            file=file_url
+            file=attachment  # ✅ تمرير الملف مباشرة
         )
 
         if tag_ids:
             tags = Tag.objects.filter(id__in=tag_ids)
             note.tags.set(tags)
 
-        # إنشاء QR
-        qr_data = file_url or request.build_absolute_uri(f'/note/{token}/')
+        # إنشاء QR Code
+        qr_data = request.build_absolute_uri(note.file.url) if note.file else request.build_absolute_uri(f'/note/{token}/')
         qr = qrcode.make(qr_data)
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
@@ -336,13 +325,13 @@ def create_note(request):
             'official_footer': "هذه الوثيقة صادرة إلكترونياً من اتحاد الصحفيين العراقيين ولا تحتاج توقيعاً أو ختم ورقي.",
         })
 
-        # حفظ PDF محليًا
+        # حفظ PDF
         pdf_dir = os.path.join(settings.MEDIA_ROOT, 'generated_pdfs')
         os.makedirs(pdf_dir, exist_ok=True)
         pdf_path = os.path.join(pdf_dir, f"{title.replace(' ', '_')}_{token}.pdf")
         HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(pdf_path)
 
-        # إنشاء نسخة PDF للـ QR فقط
+        # نسخة QR فقط PDF
         html_qr_only = render_to_string('notes/note_qr_only.html', {
             'note': note,
             'img_str': qr_code_base64,
