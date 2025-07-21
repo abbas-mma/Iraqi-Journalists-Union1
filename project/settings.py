@@ -15,7 +15,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-1234567890')
 DEBUG = False  # يجب أن يكون False في بيئة الإنتاج
 
-ALLOWED_HOSTS = ['abbas114.pythonanywhere.com']  # ← استبدل باسم نطاقك في PythonAnywhere
+# ---------------------------------
+# ALLOWED_HOSTS يدعم متغير بيئة أو القيمة الافتراضية
+# ---------------------------------
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'abbas114.pythonanywhere.com localhost 127.0.0.1').split()
 
 # ------------------------------
 # إعدادات البريد الإلكتروني
