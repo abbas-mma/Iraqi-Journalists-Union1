@@ -12,6 +12,7 @@ urlpatterns = [
     path('news/', views.news_list, name='news'),
     path('news/<int:news_id>/comment/', views.add_news_comment, name='add_news_comment'),
     path('news/<int:news_id>/like/', views.toggle_news_like, name='toggle_news_like'),
+    path('news/<int:news_id>/delete/', views.delete_news, name='delete_news'),
 
     # تفعيل الحساب عبر البريد
     path('activate/<str:token>/', views.activate_account, name='activate_account'),

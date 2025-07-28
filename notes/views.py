@@ -1,3 +1,16 @@
+# الاستيرادات الأساسية
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404
+
+# حذف خبر (للمشرفين فقط)
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'profile', None) and u.profile.role in ['admin', 'supervisor'])
+@require_POST
+def delete_news(request, news_id):
+    news = get_object_or_404(News, id=news_id)
+    news.delete()
+    messages.success(request, "تم حذف الخبر بنجاح.")
+    return redirect('news')
 # تفعيل الحساب عبر البريد الإلكتروني
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import login as auth_login
@@ -42,9 +55,9 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'password_reset_complete.html'
 from .models_news import News, NewsComment, NewsLike
-# إضافة تعليق على خبر
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
+
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import get_object_or_404, render, redirect
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
