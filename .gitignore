@@ -14,8 +14,6 @@ venv/
 *.log
 *.pot
 local_settings.py
-db.sqlite3
-db.sqlite3-journal
 media/
 staticfiles/
 
@@ -31,8 +29,6 @@ staticfiles/
 .env.production
 .env.example
 
-# SQLite database
-*.sqlite3
 
 # Compiled translation files
 *.mo

@@ -1,20 +1,125 @@
-{% extends "base.html" %}
-{% block title %}تسجيل مستخدم جديد{% endblock %}
-{% block content %}
-<div class="container" style="max-width:400px;margin:40px auto;background:#fff;padding:30px;border-radius:12px;text-align:center;">
-    <h2 class="mb-4">📝 تسجيل مستخدم جديد</h2>
-    {% if error %}
-        <div style="color:red; margin-bottom:10px;">{{ error }}</div>
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        <label for="username">اسم المستخدم</label>
-        <input type="text" name="username" id="username" required class="form-control mb-3" style="width:100%;padding:10px;margin:10px 0;">
-        <label for="email">البريد الإلكتروني</label>
-        <input type="email" name="email" id="email" required class="form-control mb-3" style="width:100%;padding:10px;margin:10px 0;">
-        <label for="password">كلمة المرور</label>
-        <input type="password" name="password" id="password" required class="form-control mb-3" style="width:100%;padding:10px;margin:10px 0;">
-        <button type="submit" class="btn btn-primary" style="background:#2980b9;color:#fff;padding:10px 30px;border:none;border-radius:8px;">تسجيل</button>
-    </form>
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تسجيل مستخدم جديد</title>
+    <style>
+        body {
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            font-family: 'Tahoma', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            color: #fff;
+        }
+
+        .container img {
+            height: 50px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        h3 {
+            margin: 15px 0;
+            font-size: 20px;
+            color: #ffffff;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 6px;
+            background-color: #fff;
+            color: #000;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 5px #0077ff;
+        }
+
+        button {
+            background-color: #0077ff;
+            border: none;
+            padding: 10px 0;
+            width: 100%;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #005fd1;
+        }
+
+        .error {
+            background-color: #ffcccc;
+            color: #990000;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .login-link {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #aad4ff;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="{% static 'logo.png' %}" alt="شعار">
+        <h2>اتحاد الصحفيين العراقيين</h2>
+        <h3>تسجيل مستخدم جديد</h3>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="اسم المستخدم" required>
+            <input type="email" name="email" placeholder="البريد الإلكتروني" required>
+            <input type="password" name="password" placeholder="كلمة المرور" required>
+            <button type="submit">تسجيل</button>
+        </form>
+
+        <div class="login-link">
+            لديك حساب؟ <a href="{% url 'login' %}">تسجيل الدخول</a>
+        </div>
+    </div>
+</body>
+</html>

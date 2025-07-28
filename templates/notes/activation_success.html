@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}تفعيل الحساب{% endblock %}
+{% block content %}
+<div class="container" style="max-width:400px;margin:40px auto;background:#fff;padding:30px;border-radius:12px;text-align:center;">
+    {% if already_active %}
+        <h2 class="mb-4 text-green-700">الحساب مفعل بالفعل ✅</h2>
+        <a href="{% url 'login' %}" class="btn btn-primary" style="background:#2980b9;color:#fff;padding:10px 30px;border:none;border-radius:8px;">تسجيل الدخول</a>
+    {% else %}
+        <h2 class="mb-4 text-green-700">تم تفعيل حسابك بنجاح ✅</h2>
+        <div style="margin: 18px 0; color: #2563eb; font-weight: bold;">سيتم تحويلك تلقائياً إلى لوحة المستخدم خلال ثوانٍ...</div>
+        <a href="{% url 'home' %}" class="btn btn-primary" style="background:#2980b9;color:#fff;padding:10px 30px;border:none;border-radius:8px;">الذهاب إلى لوحة المستخدم</a>
+        <script>
+            setTimeout(function(){ window.location.href = "{% url 'home' %}"; }, 3500);
+        </script>
+    {% endif %}
+</div>
+{% endblock %}

@@ -13,34 +13,36 @@
             color: #000;
         }
 
-        .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 400px;
-            opacity: 0.06;
-            transform: translate(-50%, -50%);
-            z-index: 0;
-        }
-
         .header, .footer, .content {
             position: relative;
             z-index: 1;
         }
 
         .qr-box {
-            border: 2px dashed #888;
-            padding: 20px;
+            border: 3px solid black;
+            background-color: black;
+            color: white;
+            padding: 15px;
             text-align: center;
-            margin-top: 20px;
+            margin: 40px auto; /* يضمن التوسيط */
             width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .qr-box img {
             width: 200px;
             height: 200px;
+            display: block;
+            margin: 0 auto 10px auto;
+            background: white;
+            padding: 5px;
+        }
+
+        .qr-code-text {
+            font-size: 18px; /* أكبر */
+            font-weight: bold;
+            letter-spacing: 3px;
+            font-family: monospace;
+            margin-top: 10px;
         }
 
         .info-header {
@@ -59,17 +61,23 @@
             margin-top: -20px;
         }
 
-        .note-title {
-            font-weight: bold;
-            font-size: 20px;
-            margin: 20px 0;
-            text-align: center;
-        }
-
         .footer {
             text-align: center;
             margin-top: 40px;
             font-size: 13px;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .warning-text {
+            text-align: center;
+            font-size: 17px;
+            margin-top: 30px;
+            font-weight: bold;
         }
     </style>
 
@@ -85,21 +93,17 @@
 </head>
 <body>
 
-    <!-- ✅ الشعار كعلامة مائية -->
-    <img src="{{ logo_url }}" class="watermark" alt="علامة أمان">
-
-    <!-- ✅ رأس الصفحة -->
+    <!-- رأس الصفحة -->
     <div class="header">
         <div class="info-header">
             <div class="info-left">
-                <strong>اتحاد الصحفيين العراقيين</strong><br>
-                المقر العام<br>
-                تاريخ رفع الوثيقة: {{ note.created_at|date:"Y-m-d" }}<br>
-                تاريخ رمز التحقق: {{ now|date:"Y-m-d" }}
-            </div>
-            <div class="info-right" style="text-align: left;">
                 <strong>رقم الوثيقة:</strong> ____________<br>
-                تاريخ الطباعة: {{ now|date:"Y-m-d" }}
+                        </div>
+            <div class="info-right" style="text-align: left;">
+                 <strong>اتحاد الصحفيين العراقيين</strong><br>
+                 المقر العام<br>
+                تاريخ رفع الوثيقة: {{ note.created_at|date:"Y-m-d" }}<br>
+                تاريخ رمز التحقق: {{ note.created_at|date:"Y-m-d" }}<br>
             </div>
         </div>
 
@@ -108,7 +112,7 @@
         </div>
     </div>
 
-    <!-- ✅ محتوى الوثيقة -->
+    <!-- محتوى الوثيقة -->
     <div class="content">
         <p style="text-align: center;">
             إن محافظتك على هذه الوثيقة دون ضرر يُمكنك من استخدامها في الدوائر المرتبطة بهذا النظام.<br>
@@ -124,19 +128,29 @@
         {% if img_str %}
         <div class="qr-box">
             <img src="data:image/png;base64,{{ img_str }}" alt="QR Code">
-            <p style="font-size: 14px; margin-top: 10px;">{{ note.access_token }}</p>
+            {% with short_token=note.access_token|stringformat:"s"|slice:":8" %}
+                <p class="qr-code-text">{{ short_token }}</p>
+            {% endwith %}
         </div>
         {% else %}
         <p style="color: red; text-align: center; font-weight: bold;">⚠️ رمز QR غير متوفر أو تم حذفه.</p>
         {% endif %}
+
+        <p class="warning-text">
+            ⚠️ لا تشارك هذا الرمز مع أي جهة غير رسمية
+        </p>
+
+        {% if note.file %}
+        <div style="text-align:center; margin-top:30px;" class="no-print">
+            <a href="{{ note.file.url }}" download class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow transition font-bold">تحميل الملف المرفق</a>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- ✅ التذييل -->
+    <!-- التذييل -->
     <div class="footer">
         في حال حدوث تلكؤ أو مشكلة في قراءة الرمز السريع، يرجى التواصل مع الدعم الفني للاتحاد.<br>
         <strong>{{ site_url }}</strong> | <strong>0771214328</strong><br><br>
-        <strong>رئيس اتحاد الصحفيين العراقيين</strong><br>
-        <strong>مظفر عبد المجيد المحمداوي</strong>
     </div>
 
 </body>

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}معاينة وتعديل الوثيقة{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white p-8 mt-10 shadow-md rounded-xl">
+    <h2 class="text-2xl font-bold text-blue-800 mb-6 text-center">معاينة وتعديل الوثيقة قبل الحفظ</h2>
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        <input type="hidden" name="preview" value="1">
+        <div>
+            <label class="block mb-1 font-medium">عنوان الوثيقة</label>
+            <input type="text" name="title" value="{{ title }}" required class="w-full border border-gray-300 p-2 rounded">
+        </div>
+        <div>
+            <label class="block mb-1 font-medium">المحتوى</label>
+            <textarea name="content" rows="6" required class="w-full border border-gray-300 p-3 rounded resize-none">{{ content }}</textarea>
+        </div>
+        <!-- باقي الحقول ... -->
+        <div>
+            <label class="inline-flex items-center">
+                <input type="checkbox" name="file_login_only" {% if file_login_only %}checked{% endif %} class="form-checkbox h-5 w-5 text-blue-600">
+                <span class="ml-2 text-gray-700 font-medium">الملف المرفق لا يظهر إلا بعد تسجيل الدخول</span>
+            </label>
+        </div>
+        <div>
+            <label class="block mb-1 font-medium">تحديد مستخدم معين لرؤية الملف (اختياري)</label>
+            <input type="text" name="file_for_user" value="{{ file_for_user }}" class="w-full border border-gray-300 p-2 rounded" placeholder="اسم المستخدم أو البريد الإلكتروني">
+        </div>
+        <button type="submit" name="confirm" value="1" class="w-full bg-green-700 text-white py-2 rounded font-bold hover:bg-green-900 transition">تأكيد وحفظ وإنشاء PDF</button>
+    </form>
+    <hr class="my-8">
+    <h3 class="text-xl font-bold text-gray-700 mb-4">معاينة الوثيقة</h3>
+    <div class="border rounded p-4 bg-gray-50">
+        <h4 class="font-bold text-blue-700">{{ title }}</h4>
+        <p class="text-gray-800">{{ content }}</p>
+        {% if qr_code_base64 %}
+        <div style="text-align:center; margin:20px 0;">
+            <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="QR Code" style="width:180px;">
+        </div>
+        {% endif %}
+        {% if file_url %}
+        <div style="text-align:center; margin-top:30px;">
+            <a href="{{ file_url }}" download class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow transition font-bold">تحميل الملف المرفق</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

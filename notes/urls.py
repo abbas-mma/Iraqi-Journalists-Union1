@@ -1,10 +1,20 @@
-from django.urls import path
+from django.urls import path 
 from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     # ✅ الصفحة الرئيسية
     path('', views.home, name='home'),
+    # إضافة هذا السطر في urlpatterns
+    path('news/add/', views.add_news, name='add_news'),
+
+    # ✅ عرض الأخبار - إضافة المسار هنا
+    path('news/', views.news_list, name='news'),
+    path('news/<int:news_id>/comment/', views.add_news_comment, name='add_news_comment'),
+    path('news/<int:news_id>/like/', views.toggle_news_like, name='toggle_news_like'),
+
+    # تفعيل الحساب عبر البريد
+    path('activate/<str:token>/', views.activate_account, name='activate_account'),
 
     # ✅ الوثائق: عرض، تفاصيل، QR، PDF
     path('note/<uuid:token>/', views.note_detail, name='note_detail'),
@@ -13,7 +23,14 @@ urlpatterns = [
 
     # ✅ الوصول عبر QR
     path('qr/<uuid:token>/', views.qr_note_access, name='qr_note_access'),
+]
 
+from .views import (
+    CustomPasswordResetView, CustomPasswordResetDoneView,
+    CustomPasswordResetConfirmView, CustomPasswordResetCompleteView
+)
+
+urlpatterns += [
     # ✅ إدارة الحساب وتسجيل الدخول
     path('register/', views.register, name='register'),
     path('no_permission/', views.no_permission, name='no_permission'),
@@ -21,6 +38,9 @@ urlpatterns = [
 
     # ✅ إنشاء وثيقة جديدة
     path('create_note/', views.create_note, name='create_note'),
+
+    # ✅ لوحة التحكم (Dashboard) — تم الإضافة
+    path('dashboard/', views.dashboard, name='dashboard'),
 
     # ✅ لوحة الإحصائيات والتحليل
     path('stats/', views.stats_dashboard, name='stats_dashboard'),
@@ -47,12 +67,17 @@ urlpatterns = [
 
     # ✅ إدارة المستخدمين
     path('user-management/', views.user_management, name='user_management'),
+    path('add-user/', views.add_user, name='add_user'),
     path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
     path('change-user-role/<int:user_id>/', views.change_user_role, name='change_user_role'),
 
+    # ✅ الإشعارات (تمت الإضافة هنا)
+    path('notifications/', views.notifications, name='notifications'),
+
     # ✅ استعادة وتغيير كلمة المرور (نظام Django الأساسي)
-    path('password-reset/', auth_views.PasswordResetView.as_view(template_name='password_reset_form.html'), name='password_reset'),
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'), name='password_reset_confirm'),
-    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
-    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='password_reset_done.html'), name='password_reset_done'),
+    # إعادة تعيين كلمة السر
+    path('password_reset/', CustomPasswordResetView.as_view(), name='password_reset'),
+    path('password_reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset/done/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 ]

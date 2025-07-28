@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # الإعدادات الأمنية
 # ------------------------------
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-1234567890')
-DEBUG = False  # يجب أن يكون False في بيئة الإنتاج
+DEBUG = True  # يجب أن يكون False في بيئة الإنتاج
 
 # ---------------------------------
 # ALLOWED_HOSTS يدعم متغير بيئة أو القيمة الافتراضية

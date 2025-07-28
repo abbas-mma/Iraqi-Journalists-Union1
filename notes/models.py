@@ -15,6 +15,7 @@ class UserProfile(models.Model):
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='viewer')
+    activation_token = models.CharField(max_length=64, blank=True, null=True, help_text="رمز تفعيل الحساب عبر البريد")
 
     def __str__(self):
         return f"{self.user.username} - {self.get_role_display()}"
@@ -28,6 +29,9 @@ class Tag(models.Model):
 
 
 class Note(models.Model):
+    file_login_only = models.BooleanField("الملف المرفق محمي (يظهر فقط بعد تسجيل الدخول)", default=False)
+    file_for_user = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL, related_name='protected_files', help_text="الملف يظهر فقط لهذا المستخدم إذا تم اختياره")
+    login_only = models.BooleanField("تظهر فقط بعد تسجيل الدخول", default=False, help_text="لا يمكن لأي زائر أو غير مسجل الدخول رؤيتها حتى عبر QR")
     TYPE_CHOICES = [
         ('administrative', 'أمر إداري'),
         ('official', 'كتاب رسمي'),
@@ -62,6 +66,8 @@ class Note(models.Model):
 
     is_archived = models.BooleanField("أرشفة", default=False)
     is_deleted = models.BooleanField("تم الحذف؟", default=False)
+
+    is_private = models.BooleanField("وثيقة خاصة (يظهرها فقط صاحبها)", default=False, help_text="إذا كانت الوثيقة خاصة، لا يمكن لأي مستخدم آخر رؤيتها حتى عبر QR")
 
     tags = models.ManyToManyField(Tag, verbose_name="الوسوم", blank=True)
 

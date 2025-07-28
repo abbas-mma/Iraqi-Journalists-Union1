@@ -3,7 +3,35 @@
 {% block content %}
 <div class="flex items-center justify-between mb-4">
   <h2 class="text-xl font-bold">👥 إدارة المستخدمين</h2>
-  <a href="{% url 'role_change_log' %}" class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700">سجل تغييرات الصلاحيات</a>
+  <div class="flex gap-2">
+    <a href="{% url 'add_user' %}" class="bg-blue-700 text-white px-3 py-1 rounded hover:bg-blue-900">➕ إضافة مستخدم جديد</a>
+    <a href="{% url 'role_change_log' %}" class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700">سجل تغييرات الصلاحيات</a>
+  </div>
+</div>
+
+<!-- إحصائيات سريعة -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+  <div class="bg-blue-100 rounded-xl p-4 text-center shadow">
+    <div class="text-2xl font-bold text-blue-700">{{ total_users }}</div>
+    <div class="text-sm text-blue-900 mt-2">إجمالي المستخدمين</div>
+  </div>
+  <div class="bg-green-100 rounded-xl p-4 text-center shadow">
+    <div class="text-2xl font-bold text-green-700">{{ active_docs }}</div>
+    <div class="text-sm text-green-900 mt-2">الوثائق النشطة</div>
+  </div>
+  <div class="bg-pink-100 rounded-xl p-4 text-center shadow">
+    <div class="text-2xl font-bold text-pink-700">{{ archived_docs }}</div>
+    <div class="text-sm text-pink-900 mt-2">الوثائق المؤرشفة</div>
+  </div>
+  <div class="bg-yellow-100 rounded-xl p-4 text-center shadow">
+    <div class="text-2xl font-bold text-yellow-700">{% for r in roles_stats %}{{ r.count }} {% endfor %}</div>
+    <div class="text-sm text-yellow-900 mt-2">المستخدمون حسب الدور</div>
+    <div class="text-xs text-gray-600 mt-1">
+      {% for r in roles_stats %}
+        <span class="inline-block bg-gray-200 rounded px-2 py-1 m-1">{{ r.role }}: {{ r.count }}</span>
+      {% endfor %}
+    </div>
+  </div>
 </div>
 {% if messages %}
   <ul class="mb-4">

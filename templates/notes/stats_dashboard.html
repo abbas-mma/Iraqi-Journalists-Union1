@@ -1,7 +1,9 @@
 {% extends "base.html" %}
-{% block title %}لوحة الإحصائيات والتقارير{% endblock %}
+{% load static %}
+{% block title %}لوحة الإحصائيات والتقارير - اتحاد الصحفيين العراقيين{% endblock %}
 {% block content %}
 <h2 class="text-2xl font-bold mb-6 text-blue-900">📈 لوحة الإحصائيات والتقارير</h2>
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
     <div class="bg-white rounded shadow p-6">
         <h3 class="font-bold mb-4">عدد الوثائق حسب النوع</h3>
@@ -16,42 +18,60 @@
         <canvas id="usersByRole"></canvas>
     </div>
 </div>
+
+<!-- هنا نمرر البيانات كـ JSON آمن -->
+{{ notes_by_type_labels|json_script:"notesByTypeLabels" }}
+{{ notes_by_type_data|json_script:"notesByTypeData" }}
+
+{{ notes_by_month_labels|json_script:"notesByMonthLabels" }}
+{{ notes_by_month_data|json_script:"notesByMonthData" }}
+
+{{ users_by_role_labels|json_script:"usersByRoleLabels" }}
+{{ users_by_role_data|json_script:"usersByRoleData" }}
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // وثائق حسب النوع
-    const notesByType = {
-        labels: {{ notes_by_type|map(attribute='doc_type')|list|safe }},
-        data: {{ notes_by_type|map(attribute='count')|list|safe }}
-    };
+    // قراءة البيانات من العناصر المخفية
+    const notesByTypeLabels = JSON.parse(document.getElementById('notesByTypeLabels').textContent);
+    const notesByTypeData = JSON.parse(document.getElementById('notesByTypeData').textContent);
+
     new Chart(document.getElementById('notesByType'), {
         type: 'pie',
         data: {
-            labels: notesByType.labels,
-            datasets: [{ data: notesByType.data, backgroundColor: ['#1976d2','#388e3c','#fbc02d','#d32f2f','#7b1fa2'] }]
+            labels: notesByTypeLabels,
+            datasets: [{
+                data: notesByTypeData,
+                backgroundColor: ['#1976d2','#388e3c','#fbc02d','#d32f2f','#7b1fa2']
+            }]
         }
     });
-    // وثائق حسب الشهر
-    const notesByMonth = {
-        labels: {{ notes_by_month|map(attribute='month')|list|safe }},
-        data: {{ notes_by_month|map(attribute='count')|list|safe }}
-    };
+
+    const notesByMonthLabels = JSON.parse(document.getElementById('notesByMonthLabels').textContent);
+    const notesByMonthData = JSON.parse(document.getElementById('notesByMonthData').textContent);
+
     new Chart(document.getElementById('notesByMonth'), {
         type: 'bar',
         data: {
-            labels: notesByMonth.labels,
-            datasets: [{ label: 'عدد الوثائق', data: notesByMonth.data, backgroundColor: '#1976d2' }]
+            labels: notesByMonthLabels,
+            datasets: [{
+                label: 'عدد الوثائق',
+                data: notesByMonthData,
+                backgroundColor: '#1976d2'
+            }]
         }
     });
-    // المستخدمين حسب الدور
-    const usersByRole = {
-        labels: {{ users_by_role|map(attribute='role')|list|safe }},
-        data: {{ users_by_role|map(attribute='count')|list|safe }}
-    };
+
+    const usersByRoleLabels = JSON.parse(document.getElementById('usersByRoleLabels').textContent);
+    const usersByRoleData = JSON.parse(document.getElementById('usersByRoleData').textContent);
+
     new Chart(document.getElementById('usersByRole'), {
         type: 'doughnut',
         data: {
-            labels: usersByRole.labels,
-            datasets: [{ data: usersByRole.data, backgroundColor: ['#388e3c','#fbc02d','#d32f2f','#7b1fa2','#1976d2'] }]
+            labels: usersByRoleLabels,
+            datasets: [{
+                data: usersByRoleData,
+                backgroundColor: ['#388e3c','#fbc02d','#d32f2f','#7b1fa2','#1976d2']
+            }]
         }
     });
 </script>

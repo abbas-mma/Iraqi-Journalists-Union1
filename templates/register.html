@@ -105,8 +105,15 @@
         <h2>اتحاد الصحفيين العراقيين</h2>
         <h3>تسجيل مستخدم جديد</h3>
 
+
         {% if error %}
             <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if not error and request.method == 'POST' %}
+            <div style="background:#e0ffe0;color:#006600;padding:12px;border-radius:6px;margin-bottom:15px;">
+                تم إرسال رسالة تفعيل إلى بريدك الإلكتروني. يرجى التحقق من البريد وتفعيل الحساب قبل تسجيل الدخول.
+            </div>
         {% endif %}
 
         <form method="post">

@@ -6,65 +6,74 @@
 {% block content %}
 
 <!-- ✅ عنوان الصفحة -->
-<h1 class="text-2xl font-bold mb-4 text-blue-900">📊 لوحة التحكم الرئيسية</h1>
+<h1 class="text-3xl font-extrabold mb-6 text-blue-800 text-center drop-shadow-lg">📊 لوحة التحكم الرئيسية</h1>
 
-<!-- ✅ أزرار إدارة الوثائق والمستخدمين -->
-<div class="flex flex-wrap gap-3 mb-6">
-    <a href="{% url 'create_note' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">➕ إنشاء وثيقة</a>
-    <a href="{% url 'archived_notes' %}" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">🗂 الأرشيف</a>
-    <a href="{% url 'expired_notes' %}" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">📅 المنتهية</a>
-    <a href="{% url 'outgoing_notes' %}" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 الصادرة</a>
-    <a href="{% url 'incoming_notes' %}" class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">📥 الواردة</a>
-    <a href="{% url 'user_management' %}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">👥 المستخدمون</a>
-    <a href="{% url 'stats_dashboard' %}" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-black">📈 الإحصائيات</a>
+<!-- ✅ أزرار إدارة الوثائق والمستخدمين والإشعارات والإعدادات -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+    <a href="{% url 'create_note' %}" class="bg-blue-700 text-white px-6 py-3 rounded-xl shadow hover:bg-blue-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-plus"></i> إنشاء وثيقة عادية</a>
+    <a href="{% url 'create_note' %}?private=1" class="bg-purple-700 text-white px-6 py-3 rounded-xl shadow hover:bg-purple-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-lock"></i> إنشاء وثيقة خاصة</a>
+    <a href="{% url 'create_note' %}?login_only=1" class="bg-blue-800 text-white px-6 py-3 rounded-xl shadow hover:bg-blue-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-user"></i> إنشاء وثيقة تظهر بعد تسجيل الدخول</a>
+    <a href="{% url 'archived_notes' %}" class="bg-yellow-500 text-white px-6 py-3 rounded-xl shadow hover:bg-yellow-600 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-archive"></i> الأرشيف</a>
+    <a href="{% url 'expired_notes' %}" class="bg-red-500 text-white px-6 py-3 rounded-xl shadow hover:bg-red-700 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-calendar-times"></i> المنتهية</a>
+    <a href="{% url 'outgoing_notes' %}" class="bg-green-600 text-white px-6 py-3 rounded-xl shadow hover:bg-green-800 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-paper-plane"></i> الصادرة</a>
+    <a href="{% url 'incoming_notes' %}" class="bg-blue-700 text-white px-6 py-3 rounded-xl shadow hover:bg-blue-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-inbox"></i> الواردة</a>
+    <a href="{% url 'user_management' %}" class="bg-purple-600 text-white px-6 py-3 rounded-xl shadow hover:bg-purple-800 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-users"></i> المستخدمون</a>
+    <a href="{% url 'stats_dashboard' %}" class="bg-gray-900 text-white px-6 py-3 rounded-xl shadow hover:bg-black transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-chart-bar"></i> الإحصائيات</a>
+    <a href="{% url 'notifications' %}" class="bg-red-600 text-white px-6 py-3 rounded-xl shadow hover:bg-red-800 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-bell"></i> الإشعارات</a>
+    {% if user_profile.role == 'admin' or user_profile.role == 'supervisor' %}
+    <a href="{% url 'dashboard' %}" class="bg-yellow-500 text-white px-6 py-3 rounded-xl shadow hover:bg-yellow-700 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-cogs"></i> الإعدادات</a>
+    {% endif %}
 </div>
 
 <!-- ✅ أزرار السجلات والأنشطة -->
-<div class="flex flex-wrap gap-3 mb-6">
-    <a href="{% url 'search_log' %}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">🔍 سجل البحث</a>
-    <a href="{% url 'archive_log' %}" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">🗂 سجل الأرشفة</a>
-    <a href="{% url 'login_history' %}" class="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-900">🕓 سجل الدخول</a>
-    <a href="{% url 'role_change_log' %}" class="bg-yellow-800 text-white px-4 py-2 rounded hover:bg-yellow-900">🛠 تغيير الأدوار</a>
-    <a href="{% url 'activity_log' %}" class="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-800">📊 سجل الأنشطة</a>
-    <a href="{% url 'access_log' %}" class="bg-teal-700 text-white px-4 py-2 rounded hover:bg-teal-800">📜 سجل الوصول</a>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+    <a href="{% url 'search_log' %}" class="bg-gray-700 text-white px-6 py-3 rounded-xl shadow hover:bg-gray-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-search"></i> سجل البحث</a>
+    <a href="{% url 'archive_log' %}" class="bg-indigo-600 text-white px-6 py-3 rounded-xl shadow hover:bg-indigo-800 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-folder"></i> سجل الأرشفة</a>
+    <a href="{% url 'login_history' %}" class="bg-green-800 text-white px-6 py-3 rounded-xl shadow hover:bg-green-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-sign-in-alt"></i> سجل الدخول</a>
+    <a href="{% url 'role_change_log' %}" class="bg-yellow-700 text-white px-6 py-3 rounded-xl shadow hover:bg-yellow-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-user-cog"></i> تغيير الأدوار</a>
+    <a href="{% url 'activity_log' %}" class="bg-red-700 text-white px-6 py-3 rounded-xl shadow hover:bg-red-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-tasks"></i> سجل الأنشطة</a>
+    <a href="{% url 'access_log' %}" class="bg-blue-700 text-white px-6 py-3 rounded-xl shadow hover:bg-teal-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-file-alt"></i> سجل الوصول</a>
 </div>
 
 <!-- ✅ إحصائيات -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-blue-100 p-4 rounded shadow text-center">
         <h4 class="font-bold">المستخدمون</h4>
-        <p class="text-2xl">{{ stats.users }}</p>
+        <!-- يمكنك هنا وضع إحصائيات المستخدمين -->
     </div>
     <div class="bg-green-100 p-4 rounded shadow text-center">
         <h4 class="font-bold">الوثائق النشطة</h4>
-        <p class="text-2xl">{{ stats.active }}</p>
+        <!-- إحصائيات أخرى -->
     </div>
     <div class="bg-yellow-100 p-4 rounded shadow text-center">
         <h4 class="font-bold">الوثائق المنتهية</h4>
-        <p class="text-2xl">{{ stats.expired }}</p>
+        <!-- إحصائيات أخرى -->
     </div>
-    <div class="bg-purple-100 p-4 rounded shadow text-center">
-        <h4 class="font-bold">الوثائق المؤرشفة</h4>
-        <p class="text-2xl">{{ stats.archived }}</p>
+    <div class="bg-red-100 p-4 rounded shadow text-center">
+        <h4 class="font-bold">الأخبار</h4>
+        <!-- إحصائيات أخرى -->
     </div>
 </div>
 
-<!-- ✅ نموذج البحث -->
-<form method="get" class="bg-white p-4 rounded shadow mb-6 flex flex-wrap items-center gap-3">
-    <input type="text" name="q" placeholder="بحث بعنوان الوثيقة..." value="{{ request.GET.q|default:'' }}"
-           class="border p-2 rounded flex-1" />
-    <select name="doc_type" class="border p-2 rounded">
-        <option value="">كل الأنواع</option>
-        <option value="official" {% if request.GET.doc_type == 'official' %}selected{% endif %}>كتاب رسمي</option>
-        <option value="administrative" {% if request.GET.doc_type == 'administrative' %}selected{% endif %}>أمر إداري</option>
-        <option value="circular" {% if request.GET.doc_type == 'circular' %}selected{% endif %}>تعميم</option>
-    </select>
-    <input type="date" name="created_at" value="{{ request.GET.created_at|default:'' }}" class="border p-2 rounded" />
-    <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-black">بحث</button>
-</form>
-
-<!-- ✅ جدول الوثائق -->
-<div class="overflow-x-auto bg-white rounded shadow">
+<!-- واجهة مقسومة لنصفين: الوثائق والأخبار -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+    <!-- النصف الأول: الوثائق -->
+    <div class="bg-white rounded-2xl shadow-xl p-6">
+        <h2 class="text-2xl font-bold text-blue-800 mb-4 flex items-center gap-2"><i class="fas fa-folder-open"></i> الوثائق</h2>
+        <!-- نموذج البحث -->
+        <form method="get" class="mb-4 flex flex-col gap-2">
+            <input type="text" name="q" placeholder="بحث بعنوان الوثيقة..." value="{{ request.GET.q|default:'' }}" class="border p-2 rounded" />
+            <select name="doc_type" class="border p-2 rounded">
+                <option value="">كل الأنواع</option>
+                <option value="official" {% if request.GET.doc_type == 'official' %}selected{% endif %}>كتاب رسمي</option>
+                <option value="administrative" {% if request.GET.doc_type == 'administrative' %}selected{% endif %}>أمر إداري</option>
+                <option value="circular" {% if request.GET.doc_type == 'circular' %}selected{% endif %}>تعميم</option>
+            </select>
+            <input type="date" name="created_at" value="{{ request.GET.created_at|default:'' }}" class="border p-2 rounded" />
+            <button type="submit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-900">بحث</button>
+        </form>
+        <!-- جدول الوثائق -->
+<div class="overflow-x-auto rounded-xl shadow">
     <table class="min-w-full text-sm text-right">
         <thead class="bg-gray-100">
             <tr>
@@ -72,54 +81,83 @@
                 <th class="px-4 py-2">📂 النوع</th>
                 <th class="px-4 py-2">📆 الإنشاء</th>
                 <th class="px-4 py-2">🛡️ الحالة</th>
-                <th class="px-4 py-2">🏷 الوسوم</th>
-                <th class="px-4 py-2">👁️ مرات الوصول</th>
                 <th class="px-4 py-2">⚙️ الإجراءات</th>
             </tr>
         </thead>
         <tbody>
             {% for note in notes %}
-            <tr class="border-t hover:bg-gray-50">
-                <td class="px-4 py-2">{{ note.title }}</td>
+            <tr class="border-t hover:bg-blue-50">
+                <td class="px-4 py-2 font-semibold">{{ note.title }}</td>
                 <td class="px-4 py-2">{{ note.get_doc_type_display }}</td>
                 <td class="px-4 py-2">{{ note.created_at|date:"Y-m-d" }}</td>
                 <td class="px-4 py-2">
                     {% if note.is_archived %}
-                        <span class="text-yellow-600">مؤرشفة</span>
+                        <span class="text-pink-700 font-bold">مؤرشفة</span>
                     {% elif note.expiry_date and note.expiry_date < now %}
-                        <span class="text-red-600">منتهية</span>
+                        <span class="text-yellow-700 font-bold">منتهية</span>
                     {% else %}
-                        <span class="text-green-600">نشطة</span>
+                        <span class="text-green-700 font-bold">نشطة</span>
                     {% endif %}
                 </td>
-                <td class="px-4 py-2">
-                    {% for tag in note.tags.all %}
-                        <span class="bg-blue-200 text-blue-800 rounded px-2 py-1 text-xs">{{ tag.name }}</span>
-                    {% empty %}
-                        <span class="text-gray-400">لا توجد</span>
-                    {% endfor %}
-                </td>
-                <td class="px-4 py-2 text-center">👁️ {{ note.access_logs.count }}</td>
-                <td class="px-4 py-2 text-center">
-                    <a href="{% url 'note_detail' note.access_token %}" class="text-blue-600 hover:underline">عرض</a> |
-                    <a href="{% url 'note_qr_only' note.access_token %}" class="text-blue-600 hover:underline">QR</a> |
+                <td class="px-4 py-2 flex flex-wrap gap-2">
+                    <a href="{% url 'note_detail' note.access_token %}" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 transition text-sm">عرض</a>
+
                     {% if note.file %}
-                        <a href="{{ note.file }}" download class="text-green-600 hover:underline">تحميل</a> |
+                    <a href="{{ note.file.url }}" download class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-700 transition text-sm">تحميل</a>
                     {% endif %}
-                    {% if not note.is_archived %}
-                        <a href="{% url 'archive_note' note.id %}" class="text-yellow-600 hover:underline">أرشفة</a> |
-                    {% endif %}
-                    <a href="{% url 'delete_note' note.id %}" class="text-red-600 hover:underline"
-                       onclick="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟')">حذف</a>
+
+                    <!-- زر الأرشفة -->
+                    <form method="post" action="{% url 'archive_note' note.pk %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 transition text-sm"
+                                onclick="return confirm('هل تريد أرشفة هذه الوثيقة؟')">أرشفة</button>
+                    </form>
+
+                    <!-- زر الحذف -->
+                    <form method="post" action="{% url 'delete_note' note.pk %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition text-sm"
+                                onclick="return confirm('⚠️ هل أنت متأكد من حذف هذه الوثيقة؟')">حذف</button>
+                    </form>
                 </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="text-center text-gray-500 py-4">📭 لا توجد وثائق متاحة.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    {% if notes|length == 0 %}
+        <div class="text-center text-gray-500 py-4">📭 لا توجد وثائق متاحة.</div>
+    {% endif %}
+</div>
+    </div>
+    <!-- النصف الثاني: الأخبار -->
+    <div class="bg-white rounded-2xl shadow-xl p-6">
+        <h2 class="text-2xl font-bold text-red-700 mb-4 flex items-center gap-2"><i class="fas fa-newspaper"></i> آخر الأخبار</h2>
+        <div class="mb-4 text-center">
+            <a href="{% url 'news' %}" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 shadow transition font-bold"><i class="fas fa-eye"></i> عرض كل الأخبار</a>
+            {% if user_profile.role == 'admin' or user_profile.role == 'supervisor' %}
+            <a href="{% url 'add_news' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow transition font-bold ml-2"><i class="fas fa-plus"></i> نشر خبر جديد</a>
+            {% endif %}
+        </div>
+        {% if news_list %}
+        <ul class="space-y-4">
+            {% for news in news_list|slice:':3' %}
+            <li class="bg-gray-50 rounded-xl shadow p-4 flex gap-4 items-center">
+                {% if news.image %}
+                <img src="{{ news.image.url }}" alt="صورة الخبر" class="w-20 h-20 object-cover rounded-xl border">
+                {% endif %}
+                <div>
+                    <h3 class="text-lg font-bold text-blue-700 mb-1">{{ news.title }}</h3>
+                    <p class="text-gray-700 mb-2">{{ news.content|truncatechars:60 }}</p>
+                    <span class="text-xs text-gray-500"><i class="fas fa-clock"></i> {{ news.created_at|date:"Y-m-d H:i" }}</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-gray-400 py-8">لا توجد أخبار حالياً.</div>
+        {% endif %}
+    </div>
 </div>
 
 {% endblock %}

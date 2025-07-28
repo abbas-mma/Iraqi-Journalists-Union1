@@ -1,3 +1,97 @@
+# تفعيل الحساب عبر البريد الإلكتروني
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import login as auth_login
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.urls import reverse_lazy
+
+def activate_account(request, token):
+    from .models import UserProfile
+    profile = get_object_or_404(UserProfile, activation_token=token)
+    user = profile.user
+    if not user.is_active:
+        user.is_active = True
+        user.save()
+        profile.activation_token = None
+        profile.save()
+        auth_login(request, user)
+        return render(request, 'notes/activation_success.html')
+    else:
+        return render(request, 'notes/activation_success.html', {'already_active': True})
+
+# =====================
+# إعادة تعيين كلمة السر
+# =====================
+
+# إرسال رابط إعادة تعيين كلمة السر
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'password_reset_form.html'
+    email_template_name = 'password_reset_email.html'
+    subject_template_name = 'password_reset_subject.txt'
+    success_url = reverse_lazy('password_reset_done')
+
+# تم إرسال الإيميل
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'password_reset_done.html'
+
+# رابط التعيين الجديد
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')
+
+# تم تعيين كلمة السر
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'password_reset_complete.html'
+from .models_news import News, NewsComment, NewsLike
+# إضافة تعليق على خبر
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
+@login_required
+def add_news_comment(request, news_id):
+    news = get_object_or_404(News, id=news_id)
+    content = request.POST.get('content', '').strip()
+    if content:
+        NewsComment.objects.create(news=news, user=request.user, content=content)
+    return HttpResponseRedirect(reverse('news'))
+
+# تفعيل/إلغاء الإعجاب بخبر
+@login_required
+def toggle_news_like(request, news_id):
+    news = get_object_or_404(News, id=news_id)
+    like, created = NewsLike.objects.get_or_create(news=news, user=request.user)
+    if not created:
+        like.delete()
+    return HttpResponseRedirect(reverse('news'))
+from .models import AccessNotification
+from .models import ActivityLog
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.models import User
+from .models import UserProfile
+
+@user_passes_test(lambda u: u.is_superuser or u.profile.role in ['admin', 'supervisor'])
+def add_user(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        role = request.POST.get('role', 'viewer')
+        if not username or not email or not password:
+            messages.error(request, 'جميع الحقول مطلوبة.')
+        elif User.objects.filter(username=username).exists():
+            messages.error(request, 'اسم المستخدم موجود بالفعل.')
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, 'البريد الإلكتروني مستخدم بالفعل.')
+        else:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            UserProfile.objects.create(user=user, role=role)
+            messages.success(request, f'تم إضافة المستخدم {username} بنجاح.')
+            return redirect('user_management')
+    return render(request, 'notes/add_user.html')
+
 from dotenv import load_dotenv
 load_dotenv()
 # لوحة إحصائيات وتقارير
@@ -101,6 +195,10 @@ def get_user_profile(request):
 
 # ✅ تسجيل مستخدم جديد
 def register(request):
+    import uuid
+    from django.core.mail import send_mail
+    from django.conf import settings
+    from django.urls import reverse
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -108,11 +206,26 @@ def register(request):
 
         if User.objects.filter(username=username).exists():
             return render(request, 'notes/register.html', {'error': 'اسم المستخدم موجود بالفعل'})
+        if User.objects.filter(email=email).exists():
+            return render(request, 'notes/register.html', {'error': 'البريد الإلكتروني مستخدم بالفعل'})
+        if not email:
+            return render(request, 'notes/register.html', {'error': 'يجب إدخال بريد إلكتروني صحيح'})
 
-        user = User.objects.create_user(username=username, password=password, email=email)
+        activation_token = str(uuid.uuid4())
+        user = User.objects.create_user(username=username, password=password, email=email, is_active=False)
         UserProfile.objects.create(user=user, role='viewer')
-        login(request, user)
-        return redirect('home')
+        user.profile.activation_token = activation_token
+        user.profile.save()
+
+        activation_link = request.build_absolute_uri(reverse('activate_account', args=[activation_token]))
+        send_mail(
+            'تفعيل حسابك في اتحاد الصحفيين العراقيين',
+            f'مرحباً {username},\n\nيرجى الضغط على الرابط التالي لتفعيل حسابك:\n{activation_link}',
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=True,
+        )
+        return render(request, 'notes/register.html', {'error': 'تم إرسال رسالة تفعيل إلى بريدك الإلكتروني. يرجى التحقق من البريد لتفعيل الحساب.'})
 
     return render(request, 'notes/register.html')
 
@@ -170,21 +283,51 @@ def home(request):
         'request': request,
     })
 
+import datetime
+import logging
+import os
+import uuid
+import base64
+from io import BytesIO
 
-# ✅ عرض تفاصيل وثيقة مع QR و PDF (حماية صارمة: لا أحد يصل إلا بصلاحية)
-# ✅ عرض تفاصيل وثيقة مع QR
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+import qrcode
+from weasyprint import HTML
+
+logger = logging.getLogger(__name__)
+
+def shorten_uuid(uuid_str):
+    # إزالة الشرطة وأخذ أول 8 حروف
+    short = uuid_str.replace('-', '')[:8]
+    # تحويل كل حرف إلى رقم (مثلا: قيمة الـ ASCII مقسومة على 10 وأخذ باقي القسمة)
+    numbers = ''.join(str(ord(c) % 10) for c in short)
+    return numbers
+
 @login_required
 def note_detail(request, token):
     note = get_object_or_404(Note, access_token=token)
     user_profile = get_user_profile(request)
 
-    # حماية صارمة
     if (user_profile.role == 'viewer' or 
         (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or 
         (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
         return render(request, 'notes/no_permission.html')
 
-    # QR فقط إذا يوجد مرفق
+    # تحقق من الخصوصية: إذا كانت الوثيقة خاصة لمستخدم معين
+    if note.is_private:
+        allowed_user = note.file_for_user
+        if allowed_user:
+            if request.user != allowed_user and request.user != note.created_by:
+                return render(request, 'notes/no_permission.html')
+        else:
+            if request.user != note.created_by:
+                return render(request, 'notes/no_permission.html')
+
     if note.file:
         qr_data = request.build_absolute_uri(note.file.url)
         attachment_url = qr_data
@@ -197,6 +340,8 @@ def note_detail(request, token):
         qr_code_base64 = None
         attachment_url = ''
 
+    short_token = shorten_uuid(str(note.access_token))
+
     pdf_filename = f"{note.title.replace(' ', '_')}_{note.access_token}.pdf"
     note_pdf_url = f"{settings.MEDIA_URL}generated_pdfs/{pdf_filename}"
 
@@ -204,25 +349,40 @@ def note_detail(request, token):
         'note': note,
         'user_profile': user_profile,
         'img_str': qr_code_base64,
+        'short_token': short_token,  # أضفنا النص المختصر هنا
         'security_warning': SecurityWarning.objects.first(),
         'note_pdf_url': note_pdf_url,
         'attachment_url': attachment_url,
     })
 
+def shorten_uuid(uuid_str):
+    # إزالة الشرطات وأخذ أول 8 حروف
+    short = uuid_str.replace('-', '')[:8]
+    # تحويل كل حرف لرقم (مثلاً بقيمة ASCII % 10)
+    numbers = ''.join(str(ord(c) % 10) for c in short)
+    return numbers
 
-# ✅ صفحة QR فقط - تعرض صورة QR إن وُجد مرفق، وإلا تعرض رسالة
 @login_required
 def note_qr_only(request, token):
     note = get_object_or_404(Note, access_token=token)
     user_profile = get_user_profile(request)
 
-    # حماية الوصول
+
     if (user_profile.role == 'viewer' or 
         (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or 
         (note.expiry_date and note.expiry_date < timezone.now() and user_profile.role != 'admin')):
         return render(request, 'notes/no_permission.html')
 
-    # استخراج باراميتر الطباعة
+    # تحقق من الخصوصية: إذا كانت الوثيقة خاصة لمستخدم معين
+    if note.is_private:
+        allowed_user = note.file_for_user
+        if allowed_user:
+            if request.user != allowed_user and request.user != note.created_by:
+                return render(request, 'notes/no_permission.html')
+        else:
+            if request.user != note.created_by:
+                return render(request, 'notes/no_permission.html')
+
     show_print = request.GET.get('print') == '1'
 
     if note.file:
@@ -232,37 +392,20 @@ def note_qr_only(request, token):
         qr.save(buffer, format='PNG')
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
 
+        short_token = shorten_uuid(str(note.access_token))
+
         return render(request, 'notes/note_qr_only.html', {
             'note': note,
             'img_str': qr_code_base64,
             'serial_number': note.id,
             'logo_url': request.build_absolute_uri('/static/logo.png'),
-            'show_print': show_print,  # ✅ نمرر المتغير إلى القالب
+            'show_print': show_print,
+            'short_token': short_token,
         })
     else:
         return render(request, 'notes/no_attachment.html', {
             'note': note,
         })
-
-    import datetime
-import logging
-import os
-import uuid
-import base64
-from io import BytesIO
-
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from django.urls import reverse
-from django.http import HttpResponseRedirect
-from django.template.loader import render_to_string
-from types import SimpleNamespace
-from django.conf import settings
-import qrcode
-from weasyprint import HTML
-
-logger = logging.getLogger(__name__)
 
 @login_required
 def create_note(request):
@@ -271,93 +414,143 @@ def create_note(request):
     if user_profile.role not in ['admin', 'supervisor', 'employee']:
         return render(request, 'notes/no_permission.html')
 
+    from django.contrib.auth.models import User
     if request.method == 'POST':
-        title = request.POST.get('title')
-        content = request.POST.get('content')
-        doc_type = request.POST.get('doc_type')
-        direction = request.POST.get('direction')
-        importance = request.POST.get('importance')
-        issuer_name = request.POST.get('issuer_name')
-        recipient_name = request.POST.get('recipient_name')
-        attachment = request.FILES.get('attachment')
-        tag_ids = request.POST.getlist('tags')
-        token = uuid.uuid4()
+        # معاينة قبل الحفظ النهائي
+        if 'preview' in request.POST and not request.POST.get('confirm'):
+            title = request.POST.get('title')
+            content = request.POST.get('content')
+            # يمكن تمرير باقي الحقول حسب الحاجة
+            return render(request, 'notes/preview_note.html', {
+                'title': title,
+                'content': content,
+            })
 
-        expiry_date_str = request.POST.get('expiry_date')
-        expiry_date = datetime.datetime.strptime(expiry_date_str, '%Y-%m-%d') if expiry_date_str else None
+        # حفظ نهائي وإنشاء PDF
+        if request.POST.get('confirm'):
+            title = request.POST.get('title')
+            content = request.POST.get('content')
+            doc_type = request.POST.get('doc_type')
+            direction = request.POST.get('direction')
+            importance = request.POST.get('importance')
+            issuer_name = request.POST.get('issuer_name')
+            recipient_name = request.POST.get('recipient_name')
+            attachment = request.FILES.get('attachment')
+            # حماية نوع الملف
+            allowed_types = [
+                'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+                'application/pdf',
+                'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            ]
+            if attachment and hasattr(attachment, 'content_type'):
+                if attachment.content_type not in allowed_types:
+                    from django.contrib import messages
+                    messages.error(request, 'نوع الملف غير مسموح. الرجاء رفع صورة أو ملف PDF أو Word فقط.')
+                    from django.contrib.auth.models import User
+                    users = User.objects.all()
+                    return render(request, 'notes/create_note.html', {
+                        'user_profile': user_profile,
+                        'tags': Tag.objects.all(),
+                        'selected_tags': request.POST.getlist('tags') if request.method == 'POST' else [],
+                        'users': users,
+                    })
+            # ضغط الصورة إذا كانت صورة
+            from PIL import Image
+            from django.core.files.uploadedfile import InMemoryUploadedFile
+            import io
+            import sys
+            if attachment and hasattr(attachment, 'content_type') and attachment.content_type.startswith('image'):
+                try:
+                    img = Image.open(attachment)
+                    img_format = img.format if img.format else 'JPEG'
+                    img_io = io.BytesIO()
+                    img = img.convert('RGB')
+                    img.save(img_io, format=img_format, quality=70, optimize=True)
+                    img_io.seek(0)
+                    attachment = InMemoryUploadedFile(
+                        img_io, None, attachment.name, attachment.content_type, sys.getsizeof(img_io), None
+                    )
+                except Exception:
+                    pass
+            tag_ids = request.POST.getlist('tags')
+            token = uuid.uuid4()
 
-        # إنشاء الوثيقة وتخزين المرفق مباشرة
-        note = Note.objects.create(
-            title=title,
-            content=content,
-            doc_type=doc_type,
-            direction=direction,
-            importance=importance,
-            expiry_date=expiry_date,
-            issuer_name=issuer_name,
-            recipient_name=recipient_name,
-            created_by=request.user,
-            access_token=token,
-            file=attachment  # ✅ تمرير الملف مباشرة
-        )
+            expiry_date_str = request.POST.get('expiry_date')
+            expiry_date = datetime.datetime.strptime(expiry_date_str, '%Y-%m-%d') if expiry_date_str else None
 
-        if tag_ids:
-            tags = Tag.objects.filter(id__in=tag_ids)
-            note.tags.set(tags)
+            is_private = bool(request.POST.get('is_private')) or request.GET.get('private') == '1'
+            login_only = request.GET.get('login_only') == '1'
 
-        # إنشاء QR Code
-        qr_data = request.build_absolute_uri(note.file.url) if note.file else request.build_absolute_uri(f'/note/{token}/')
-        qr = qrcode.make(qr_data)
-        buffer = BytesIO()
-        qr.save(buffer, format='PNG')
-        qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+            file_for_user_id = request.POST.get('file_for_user')
+            file_for_user = None
+            if file_for_user_id:
+                try:
+                    file_for_user = User.objects.get(id=file_for_user_id)
+                except User.DoesNotExist:
+                    file_for_user = None
 
-        font_path = "file://" + os.path.abspath(
-            os.path.join(settings.BASE_DIR, 'static', 'fonts', 'Amiri-Regular.ttf')
-        ).replace("\\", "/")
-
-        html_content = render_to_string('notes/note_print.html', {
-            'note': note,
-            'img_str': qr_code_base64,
-            'font_path': font_path,
-            'logo_url': request.build_absolute_uri('/static/logo.png'),
-            'serial_number': note.id,
-            'official_footer': "هذه الوثيقة صادرة إلكترونياً من اتحاد الصحفيين العراقيين ولا تحتاج توقيعاً أو ختم ورقي.",
-        })
-
-        # حفظ PDF
-        pdf_dir = os.path.join(settings.MEDIA_ROOT, 'generated_pdfs')
-        os.makedirs(pdf_dir, exist_ok=True)
-        pdf_path = os.path.join(pdf_dir, f"{title.replace(' ', '_')}_{token}.pdf")
-        HTML(string=html_content, base_url=request.build_absolute_uri('/')).write_pdf(pdf_path)
-
-        # نسخة QR فقط PDF
-        html_qr_only = render_to_string('notes/note_qr_only.html', {
-            'note': note,
-            'img_str': qr_code_base64,
-            'serial_number': note.id,
-            'logo_url': request.build_absolute_uri('/static/logo.png'),
-        })
-        qr_only_pdf_path = os.path.join(pdf_dir, f"qr_only_{token}.pdf")
-        HTML(string=html_qr_only, base_url=request.build_absolute_uri('/')).write_pdf(qr_only_pdf_path)
-
-        # إشعار بالبريد
-        if request.user.email:
-            send_mail(
-                "تم إنشاء وثيقة جديدة",
-                f"تم إنشاء وثيقة جديدة بعنوان: {title}",
-                settings.DEFAULT_FROM_EMAIL,
-                [request.user.email],
-                fail_silently=True
+            note = Note.objects.create(
+                title=title,
+                content=content,
+                doc_type=doc_type,
+                direction=direction,
+                importance=importance,
+                expiry_date=expiry_date,
+                issuer_name=issuer_name,
+                recipient_name=recipient_name,
+                created_by=request.user,
+                access_token=token,
+                file=attachment,
+                is_private=is_private,
+                login_only=login_only,
+                file_for_user=file_for_user
             )
 
-        return redirect(f"/note/{token}/qr_only/?print=1")
+            if tag_ids:
+                tags = Tag.objects.filter(id__in=tag_ids)
+                note.tags.set(tags)
 
+            if note.file:
+                qr_data = request.build_absolute_uri(f'/qr/{token}/')
+            else:
+                qr_data = request.build_absolute_uri(f'/note/{token}/')
+            qr = qrcode.make(qr_data)
+            buffer = BytesIO()
+            qr.save(buffer, format='PNG')
+            qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+            html_qr_only = render_to_string('notes/note_qr_only.html', {
+                'note': note,
+                'img_str': qr_code_base64,
+                'serial_number': note.id,
+                'logo_url': request.build_absolute_uri('/static/logo.png'),
+            })
+
+            pdf_dir = os.path.join(settings.MEDIA_ROOT, 'generated_pdfs')
+            os.makedirs(pdf_dir, exist_ok=True)
+            qr_only_pdf_path = os.path.join(pdf_dir, f"qr_only_{token}.pdf")
+            HTML(string=html_qr_only, base_url=request.build_absolute_uri('/')).write_pdf(qr_only_pdf_path)
+
+            if request.user.email:
+                send_mail(
+                    "تم إنشاء وثيقة جديدة",
+                    f"تم إنشاء وثيقة جديدة بعنوان: {title}",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [request.user.email],
+                    fail_silently=True
+                )
+
+            return redirect(f"/note/{token}/qr_only/?print=1")
+
+    from django.contrib.auth.models import User
+    users = User.objects.all()
     return render(request, 'notes/create_note.html', {
         'user_profile': user_profile,
         'tags': Tag.objects.all(),
+        'selected_tags': request.POST.getlist('tags') if request.method == 'POST' else [],
+        'users': users,
     })
-
 
 # ✅ عمليات الأرشفة والحذف والاسترجاع
 @login_required
@@ -373,7 +566,9 @@ def archive_note(request, note_id):
         subject = "تم أرشفة وثيقتك"
         message = f"تم أرشفة وثيقتك بعنوان: {note.title}"
         send_notification_email(subject, message, [note.created_by.email])
-    return HttpResponseRedirect(reverse('note_detail', args=[note.access_token]))
+    from django.contrib import messages
+    messages.success(request, f"تم أرشفة الوثيقة بنجاح: {note.title}")
+    return redirect('home')
 
 @login_required
 def delete_note(request, note_id):
@@ -388,6 +583,8 @@ def delete_note(request, note_id):
         subject = "تم حذف وثيقتك"
         message = f"تم حذف وثيقتك بعنوان: {note.title}"
         send_notification_email(subject, message, [note.created_by.email])
+    from django.contrib import messages
+    messages.success(request, f"تم حذف الوثيقة بنجاح: {note.title}")
     return redirect('home')
 
 @login_required
@@ -398,6 +595,8 @@ def restore_note(request, note_id):
     note = get_object_or_404(Note, id=note_id)
     note.is_deleted = False
     note.save()
+    from django.contrib import messages
+    messages.success(request, f"تم استرجاع الوثيقة بنجاح: {note.title}")
     return redirect('deleted_notes')
 
 
@@ -431,9 +630,17 @@ def incoming_notes(request):
 
 @login_required
 def user_notes(request):
-    return render(request, 'notes/user_notes.html', {
-        'notes': Note.objects.filter(created_by=request.user, is_deleted=False).order_by('-created_at'),
-        'user_profile': get_user_profile(request)
+    from .models_news import News
+    user_profile = get_user_profile(request)
+    notes = Note.objects.filter(created_by=request.user, is_deleted=False).order_by('-created_at')
+    news_list = News.objects.filter(is_published=True).order_by('-created_at')
+    latest_news = news_list.first() if news_list else None
+    return render(request, 'notes/user_dashboard.html', {
+        'notes': notes,
+        'user_profile': user_profile,
+        'news_list': news_list,
+        'latest_news': latest_news,
+        'request': request,
     })
 
 @login_required
@@ -449,8 +656,9 @@ def deleted_notes(request):
 def profile(request):
     return render(request, 'notes/profile.html', {
         'user': request.user,
-        'user_profile': get_user_profile(request)
+        'user_profile': request.user.profile
     })
+
 
 @login_required
 def search_log(request):
@@ -470,9 +678,22 @@ def no_permission(request):
 from django.http import FileResponse, Http404
 import mimetypes
 
+from django.contrib.auth.decorators import login_required
+
+@login_required
 def qr_note_access(request, token):
     note = get_object_or_404(Note, access_token=token)
+    # إذا كانت الوثيقة خاصة، لا يمكن لأي مستخدم غير صاحبها رؤيتها حتى عبر QR
+    if note.is_private and note.created_by != request.user:
+        return render(request, 'notes/no_permission.html')
+    # حماية الملف المرفق: لا يظهر إلا للمسجلين أو لمستخدم محدد
     if note.file:
+        # إذا كان الملف محمي للمسجلين فقط
+        if getattr(note, 'file_login_only', False) and not request.user.is_authenticated:
+            return render(request, 'notes/no_permission.html')
+        # إذا كان الملف موجه لمستخدم محدد
+        if getattr(note, 'file_for_user', None) and note.file_for_user != request.user:
+            return render(request, 'notes/no_permission.html')
         file_path = note.file.path
         file_mimetype, _ = mimetypes.guess_type(file_path)
         try:
@@ -524,11 +745,26 @@ def search_notes(request):
     })
 
 
-# إدارة المستخدمين (عرض وحذف)
-@user_passes_test(lambda u: u.is_superuser or u.userprofile.role in ['admin', 'supervisor'])
+@user_passes_test(lambda u: u.is_superuser or u.profile.role in ['admin', 'supervisor'])
 def user_management(request):
-    users = User.objects.all().select_related('userprofile')
-    return render(request, 'notes/user_management.html', {'users': users, 'request': request})
+    users = User.objects.all().select_related('profile')
+    from .models import Note, UserProfile
+    from django.db.models import Count
+
+    total_users = users.count()
+    roles_stats = UserProfile.objects.values('role').annotate(count=Count('id'))
+    active_docs = Note.objects.filter(is_archived=False, is_deleted=False).count()
+    archived_docs = Note.objects.filter(is_archived=True, is_deleted=False).count()
+
+    return render(request, 'notes/user_management.html', {
+        'users': users,
+        'request': request,
+        'total_users': total_users,
+        'roles_stats': roles_stats,
+        'active_docs': active_docs,
+        'archived_docs': archived_docs,
+    })
+
 
 @user_passes_test(lambda u: u.is_superuser or u.userprofile.role in ['admin', 'supervisor'])
 def delete_user(request, user_id):
@@ -641,3 +877,129 @@ def log_access(request, note, action):
 def access_log(request):
     logs = AccessLog.objects.select_related('note', 'user').order_by('-timestamp')[:100]
     return render(request, 'notes/access_log.html', {'logs': logs})
+@login_required
+def notifications(request):
+    notifications_list = AccessNotification.objects.filter(user=request.user).order_by('-accessed_at')
+    user_profile = UserProfile.objects.get(user=request.user)
+    return render(request, 'notes/notifications.html', {
+        'notifications': notifications_list,
+        'user_profile': user_profile,
+    })
+from django.shortcuts import render
+from django.utils.timezone import now
+from django.contrib.auth.decorators import login_required
+from .models import Note, UserProfile, Tag  # عدل حسب أسماء موديلاتك
+
+@login_required
+def dashboard(request):
+    user = request.user
+    # احصل على بيانات المستخدم الموسعة (افترضت وجود UserProfile مربوط بالمستخدم)
+    user_profile = None
+    try:
+        user_profile = user.profile
+    except UserProfile.DoesNotExist:
+        user_profile = None
+
+    # احصل على الوثائق الخاصة بالمستخدم (أو جميع الوثائق للمشرفين)
+    if user_profile and user_profile.role in ['admin', 'supervisor']:
+        notes = Note.objects.all().order_by('-created_at')
+    else:
+        notes = Note.objects.filter(created_by=user).order_by('-created_at')
+
+    # جلب الإحصائيات الأساسية
+    stats = {
+        'active': Note.objects.filter(is_archived=False, expiry_date__gt=now()).count(),
+        'archived': Note.objects.filter(is_archived=True).count(),
+        'expired': Note.objects.filter(expiry_date__lte=now(), is_archived=False).count(),
+        'users': UserProfile.objects.count(),
+    }
+
+    context = {
+        'user': user,
+        'user_profile': user_profile,
+        'notes': notes,
+        'stats': stats,
+        'now': now(),  # لتستخدم في القالب للمقارنات
+    }
+    return render(request, 'notes/dashboard.html', context)
+
+from django.shortcuts import render
+from .models_news import News
+
+def news_list(request):
+    # جلب الأخبار المنشورة للجميع، أو جميع أخبار المستخدم إذا كان ناشر أو مشرف
+    if request.user.is_authenticated:
+        user_profile = getattr(request.user, 'profile', None)
+        if user_profile and (user_profile.role in ['admin', 'supervisor'] or News.objects.filter(created_by=request.user).exists()):
+            # عرض كل الأخبار التي أنشأها المستخدم أو كل الأخبار إذا كان مشرف
+            news_list = News.objects.filter(models.Q(is_published=True) | models.Q(created_by=request.user)).order_by('-created_at').distinct()
+        else:
+            news_list = News.objects.filter(is_published=True).order_by('-created_at')
+    else:
+        user_profile = None
+        news_list = News.objects.filter(is_published=True).order_by('-created_at')
+
+    latest_news = news_list.first() if news_list.exists() else None
+
+    # تجهيز قائمة IDs الأخبار التي أعجبها المستخدم الحالي
+    user_liked_news_ids = set()
+    if request.user.is_authenticated:
+        user_liked_news_ids = set(
+            news_like.news_id for news_like in NewsLike.objects.filter(user=request.user)
+        )
+
+    return render(request, 'notes/news.html', {
+        'news_list': news_list,
+        'latest_news': latest_news,
+        'user_profile': user_profile,
+        'user_liked_news_ids': user_liked_news_ids,
+    })
+from django.shortcuts import render, redirect
+from .models_news import News
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def add_news(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        image = request.FILES.get('image')
+
+        news = News.objects.create(
+            title=title,
+            content=content,
+            image=image,
+            created_by=request.user
+        )
+        return redirect('news')
+
+    return render(request, 'notes/add_news.html')
+
+from django.shortcuts import render
+from django.db.models import Count
+from django.db import models  # مهم جدًا لاستدعاء functions.TruncMonth
+from .models import Note
+from django.contrib.auth.models import User
+
+def stats_dashboard(request):
+    notes_by_type_qs = Note.objects.values('doc_type').annotate(count=Count('id'))
+    notes_by_type_labels = [item['doc_type'] for item in notes_by_type_qs]
+    notes_by_type_data = [item['count'] for item in notes_by_type_qs]
+
+    notes_by_month_qs = Note.objects.annotate(month=models.functions.TruncMonth('created_at')) \
+                                    .values('month').annotate(count=Count('id')).order_by('month')
+    notes_by_month_labels = [item['month'].strftime('%Y-%m') for item in notes_by_month_qs]
+    notes_by_month_data = [item['count'] for item in notes_by_month_qs]
+
+    users_by_role_qs = User.objects.values('profile__role').annotate(count=Count('id'))
+    users_by_role_labels = [item['profile__role'] or 'غير محدد' for item in users_by_role_qs]
+    users_by_role_data = [item['count'] for item in users_by_role_qs]
+
+    return render(request, 'notes/stats_dashboard.html', {
+        'notes_by_type_labels': notes_by_type_labels,
+        'notes_by_type_data': notes_by_type_data,
+        'notes_by_month_labels': notes_by_month_labels,
+        'notes_by_month_data': notes_by_month_data,
+        'users_by_role_labels': users_by_role_labels,
+        'users_by_role_data': users_by_role_data,
+    })

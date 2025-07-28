@@ -3,28 +3,28 @@
 {% block content %}
 <div class="mt-24 px-6">
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-blue-800 flex items-center gap-2">📥 الوثائق الواردة</h2>
-        <a href="{% url 'create_note' %}" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">➕ إضافة وثيقة</a>
+        <h2 class="text-2xl font-bold text-cyan-800 flex items-center gap-2">📥 الوثائق الواردة</h2>
+        <a href="{% url 'create_note' %}" class="bg-gradient-to-l from-cyan-600 to-cyan-400 text-white px-5 py-2 rounded-lg shadow-lg hover:from-cyan-700 hover:to-cyan-500 focus:ring-2 focus:ring-cyan-300 transition font-bold flex items-center gap-2">➕ إضافة وثيقة</a>
     </div>
     {% if notes %}
-    <div class="overflow-x-auto rounded-lg shadow-lg border border-gray-200">
-        <table class="min-w-full bg-white divide-y divide-gray-200">
-            <thead class="bg-blue-50">
+    <div class="overflow-x-auto rounded-lg shadow-lg border border-cyan-200">
+        <table class="min-w-full bg-white divide-y divide-cyan-200">
+            <thead class="bg-cyan-50">
                 <tr>
-                    <th class="px-4 py-2 text-right text-sm font-semibold text-blue-900">العنوان</th>
-                    <th class="px-4 py-2 text-right text-sm font-semibold text-blue-900">المرسل</th>
-                    <th class="px-4 py-2 text-right text-sm font-semibold text-blue-900">تاريخ الإنشاء</th>
-                    <th class="px-4 py-2 text-right text-sm font-semibold text-blue-900">عرض</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-cyan-900">العنوان</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-cyan-900">المرسل</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-cyan-900">تاريخ الإنشاء</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-cyan-900">عرض</th>
                 </tr>
             </thead>
             <tbody>
                 {% for note in notes %}
-                <tr class="hover:bg-blue-50">
-                    <td class="px-4 py-2">{{ note.title }}</td>
-                    <td class="px-4 py-2">{{ note.sender }}</td>
-                    <td class="px-4 py-2">{{ note.created_at|date:'Y-m-d' }}</td>
+                <tr class="hover:bg-cyan-50 {% cycle 'bg-white' 'bg-cyan-100' %}">
+                    <td class="px-4 py-2 font-bold text-cyan-800">{{ note.title }}</td>
+                    <td class="px-4 py-2 text-cyan-700">{{ note.sender }}</td>
+                    <td class="px-4 py-2 text-cyan-700">{{ note.created_at|date:'Y-m-d' }}</td>
                     <td class="px-4 py-2">
-                        <a href="{% url 'note_detail' note.id %}" class="text-blue-600 hover:underline">عرض</a>
+                        <a href="{% url 'note_detail' note.id %}" class="bg-cyan-500 hover:bg-cyan-700 text-white font-bold py-1 px-4 rounded shadow transition focus:ring-2 focus:ring-cyan-300">عرض</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -32,7 +32,7 @@
         </table>
     </div>
     {% else %}
-    <div class="text-center text-gray-500 py-8">لا توجد وثائق واردة حالياً</div>
+    <div class="text-center text-cyan-500 py-8">لا توجد وثائق واردة حالياً</div>
     {% endif %}
 </div>
 {% endblock %}

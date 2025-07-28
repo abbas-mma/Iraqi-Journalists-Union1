@@ -1,26 +1,42 @@
 {% extends "base.html" %}
-{% block title %}سجل الأرشيف{% endblock %}
+{% block title %}سجل البحث{% endblock %}
 
 {% block content %}
 <div class="max-w-5xl mx-auto mt-16 px-6">
-    <h2 class="text-3xl font-bold text-center text-blue-800 mb-8">📦 سجل الأرشيف</h2>
+    <h2 class="text-3xl font-bold text-center text-blue-800 mb-6">🔍 سجل البحث</h2>
 
-    {% if archived_notes %}
+    <form method="get" action="" class="mb-6 flex justify-center gap-2">
+        <input
+            type="text"
+            name="q"
+            value="{{ request.GET.q }}"
+            placeholder="ابحث عن وثيقة..."
+            class="w-2/3 px-4 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+            type="submit"
+            class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
+        >
+            بحث
+        </button>
+    </form>
+
+    {% if search_results %}
     <table class="min-w-full bg-white rounded shadow divide-y divide-gray-200">
         <thead class="bg-blue-50">
             <tr>
                 <th class="px-4 py-3 text-right text-sm font-semibold text-blue-900">العنوان</th>
                 <th class="px-4 py-3 text-right text-sm font-semibold text-blue-900">نوع الوثيقة</th>
-                <th class="px-4 py-3 text-right text-sm font-semibold text-blue-900">تاريخ الأرشفة</th>
+                <th class="px-4 py-3 text-right text-sm font-semibold text-blue-900">تاريخ الإضافة</th>
                 <th class="px-4 py-3 text-right text-sm font-semibold text-blue-900">عرض</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-            {% for note in archived_notes %}
+            {% for note in search_results %}
             <tr class="hover:bg-blue-50">
                 <td class="px-4 py-2">{{ note.title }}</td>
                 <td class="px-4 py-2">{{ note.get_doc_type_display }}</td>
-                <td class="px-4 py-2">{{ note.archived_at|date:"Y-m-d" }}</td>
+                <td class="px-4 py-2">{{ note.created_at|date:"Y-m-d" }}</td>
                 <td class="px-4 py-2">
                     <a href="{% url 'note_detail' note.access_token %}" class="text-blue-600 hover:underline">عرض</a>
                 </td>
@@ -29,7 +45,7 @@
         </tbody>
     </table>
     {% else %}
-    <div class="text-center text-gray-500 py-12">لا توجد وثائق مؤرشفة حالياً.</div>
+    <div class="text-center text-gray-500 py-12">لا توجد نتائج بحث.</div>
     {% endif %}
 </div>
 {% endblock %}
