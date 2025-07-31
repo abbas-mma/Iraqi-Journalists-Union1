@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}عرض التقرير الأمني{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-8">
+    <h1 class="text-3xl font-bold text-center mb-6 text-blue-800">📊 عرض التقرير الأمني</h1>
+    <div class="mb-6">
+        <span class="font-semibold">نوع التقرير:</span>
+        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ report_type_display }}</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="card-modern">
+            <div class="text-xl font-bold text-blue-600">{{ report.total_actions }}</div>
+            <div class="text-gray-600">إجمالي العمليات</div>
+        </div>
+        <div class="card-modern">
+            <div class="text-xl font-bold text-green-600">{{ report.successful_logins }}</div>
+            <div class="text-gray-600">تسجيلات الدخول الناجحة</div>
+        </div>
+        <div class="card-modern">
+            <div class="text-xl font-bold text-red-600">{{ report.failed_logins }}</div>
+            <div class="text-gray-600">محاولات الدخول الفاشلة</div>
+        </div>
+        <div class="card-modern">
+            <div class="text-xl font-bold text-yellow-600">{{ report.document_downloads }}</div>
+            <div class="text-gray-600">عمليات التحميل</div>
+        </div>
+    </div>
+    <h2 class="text-xl font-bold mb-4">🔔 التنبيهات الأمنية</h2>
+    <table class="table-modern mb-8">
+        <thead>
+            <tr>
+                <th>المستوى</th>
+                <th>العدد</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>حرجة</td><td>{{ report.security_alerts.critical }}</td></tr>
+            <tr><td>عالية</td><td>{{ report.security_alerts.high }}</td></tr>
+            <tr><td>متوسطة</td><td>{{ report.security_alerts.medium }}</td></tr>
+            <tr><td>منخفضة</td><td>{{ report.security_alerts.low }}</td></tr>
+            <tr><td>إجمالي</td><td>{{ report.security_alerts.total }}</td></tr>
+        </tbody>
+    </table>
+    <h2 class="text-xl font-bold mb-4">👥 أكثر المستخدمين نشاطاً</h2>
+    <table class="table-modern mb-8">
+        <thead>
+            <tr>
+                <th>المستخدم</th>
+                <th>عدد العمليات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in report.top_users %}
+            <tr>
+                <td>{{ user.user__username }}</td>
+                <td>{{ user.action_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <h2 class="text-xl font-bold mb-4">🌐 أكثر عناوين IP نشاطاً</h2>
+    <table class="table-modern">
+        <thead>
+            <tr>
+                <th>IP</th>
+                <th>عدد العمليات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ip in report.top_ips %}
+            <tr>
+                <td>{{ ip.ip_address }}</td>
+                <td>{{ ip.action_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

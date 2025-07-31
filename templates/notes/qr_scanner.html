@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}مسح رمز QR{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8">
+    <h2 class="text-3xl font-bold text-center mb-8 text-blue-800">
+        📱 مسح رمز QR للوثائق
+    </h2>
+    
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <!-- زر تشغيل الكاميرا -->
+        <div class="text-center mb-6">
+            <button id="startScan" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                📷 تشغيل الكاميرا
+            </button>
+            <button id="stopScan" 
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition ml-4 hidden">
+                ⏹️ إيقاف الكاميرا
+            </button>
+        </div>
+        
+        <!-- منطقة عرض الكاميرا -->
+        <div id="qr-reader" class="mx-auto max-w-md"></div>
+        
+        <!-- النتائج -->
+        <div id="qr-result" class="mt-6 hidden">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-green-800 mb-2">✅ تم مسح الرمز بنجاح!</h3>
+                <p class="text-green-700">النتيجة: <span id="qr-data" class="font-mono bg-white px-2 py-1 rounded"></span></p>
+                <div class="mt-4">
+                    <a id="qr-link" href="#" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                        🔗 فتح الرابط
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- الأخطاء -->
+        <div id="qr-error" class="mt-6 hidden">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-red-800 mb-2">❌ خطأ في المسح</h3>
+                <p class="text-red-700" id="error-message">حدث خطأ غير متوقع</p>
+            </div>
+        </div>
+        
+        <!-- معلومات إضافية -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-blue-800 mb-3">💡 تعليمات الاستخدام:</h3>
+            <ul class="text-blue-700 space-y-2 text-sm">
+                <li>• اضغط على "تشغيل الكاميرا" للبدء</li>
+                <li>• وجه الكاميرا نحو رمز QR الخاص بالوثيقة</li>
+                <li>• تأكد من وضوح الرمز وإضاءة المكان</li>
+                <li>• سيتم فتح الوثيقة تلقائياً عند المسح</li>
+                <li>• يمكن مسح رموز QR للوثائق فقط</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- مكتبة Html5-QRCode -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+let html5QrcodeScanner;
+let isScanning = false;
+
+document.getElementById('startScan').addEventListener('click', function() {
+    startQRScanner();
+});
+
+document.getElementById('stopScan').addEventListener('click', function() {
+    stopQRScanner();
+});
+
+function startQRScanner() {
+    if (isScanning) return;
+    
+    // إخفاء النتائج السابقة
+    document.getElementById('qr-result').classList.add('hidden');
+    document.getElementById('qr-error').classList.add('hidden');
+    
+    html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+            showTorchButtonIfSupported: true,
+            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+        },
+        false
+    );
+    
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    
+    isScanning = true;
+    document.getElementById('startScan').classList.add('hidden');
+    document.getElementById('stopScan').classList.remove('hidden');
+}
+
+function stopQRScanner() {
+    if (!isScanning) return;
+    
+    html5QrcodeScanner.clear();
+    isScanning = false;
+    
+    document.getElementById('startScan').classList.remove('hidden');
+    document.getElementById('stopScan').classList.add('hidden');
+}
+
+function onScanSuccess(decodedText, decodedResult) {
+    console.log(`تم مسح الكود: ${decodedText}`, decodedResult);
+    
+    // إيقاف المسح
+    stopQRScanner();
+    
+    // عرض النتيجة
+    document.getElementById('qr-data').textContent = decodedText;
+    document.getElementById('qr-result').classList.remove('hidden');
+    
+    // التحقق من أن الرابط خاص بالموقع
+    if (decodedText.includes(window.location.hostname) || decodedText.startsWith('/')) {
+        document.getElementById('qr-link').href = decodedText;
+        document.getElementById('qr-link').style.display = 'inline-block';
+        
+        // فتح الرابط تلقائياً بعد 3 ثوان
+        setTimeout(function() {
+            if (confirm('هل تريد فتح الوثيقة الآن؟')) {
+                window.location.href = decodedText;
+            }
+        }, 1000);
+    } else {
+        document.getElementById('qr-link').style.display = 'none';
+        alert('⚠️ هذا الرمز لا يحتوي على رابط صالح للموقع');
+    }
+}
+
+function onScanFailure(error) {
+    // لا نعرض الأخطاء البسيطة لأنها تحدث كثيراً أثناء المسح
+    // console.warn(`خطأ في المسح: ${error}`);
+}
+
+// التحقق من دعم الكاميرا
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    document.getElementById('qr-error').classList.remove('hidden');
+    document.getElementById('error-message').textContent = 'الكاميرا غير مدعومة في هذا المتصفح';
+    document.getElementById('startScan').disabled = true;
+}
+
+// اهتزاز الهاتف عند نجاح المسح (إذا كان مدعوماً)
+function vibrate() {
+    if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+    }
+}
+</script>
+
+<style>
+/* تحسين مظهر مكتبة QR */
+#qr-reader {
+    border: 2px dashed #cbd5e0;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+#qr-reader video {
+    border-radius: 8px;
+}
+
+#qr-reader canvas {
+    border-radius: 8px;
+}
+
+/* إخفاء عناصر المكتبة غير الضرورية */
+#qr-reader__dashboard_section_csr {
+    display: none !important;
+}
+
+#qr-reader__header_message {
+    text-align: center;
+    color: #4a5568;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}

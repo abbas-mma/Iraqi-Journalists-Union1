@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}صفحة أوفلاين{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div class="text-center p-8">
+        <div class="mb-6">
+            <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.196l.707.707-1.414 1.414.707.707M12 21.804l-.707-.707 1.414-1.414-.707-.707M4.222 6.293l1.414-1.414-.707-.707-1.414 1.414M19.778 17.707l-1.414 1.414.707.707 1.414-1.414"/>
+            </svg>
+        </div>
+        
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">🔌 غير متصل بالإنترنت</h1>
+        
+        <p class="text-xl text-gray-600 mb-8 max-w-md mx-auto">
+            يبدو أنك غير متصل بالإنترنت حالياً. تحقق من اتصالك وحاول مرة أخرى.
+        </p>
+        
+        <div class="space-y-4">
+            <button onclick="window.location.reload()" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 transform hover:scale-105">
+                🔄 إعادة المحاولة
+            </button>
+            
+            <br>
+            
+            <a href="/" 
+               class="inline-block bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                🏠 العودة للرئيسية
+            </a>
+        </div>
+        
+        <div class="mt-12 p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">💡 نصائح:</h3>
+            <ul class="text-sm text-gray-600 space-y-2 text-right">
+                <li>• تحقق من اتصال الواي فاي أو البيانات</li>
+                <li>• جرب إعادة تشغيل التطبيق</li>
+                <li>• بعض الصفحات متاحة أوفلاين</li>
+                <li>• ستعمل الصفحات المحفوظة بشكل طبيعي</li>
+            </ul>
+        </div>
+        
+        <div class="mt-8 text-sm text-gray-500">
+            <p>اتحاد الصحفيين العراقيين - التطبيق المحمول</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// التحقق من عودة الاتصال
+window.addEventListener('online', function() {
+    // إشعار بعودة الاتصال
+    alert('✅ تم استعادة الاتصال بالإنترنت!');
+    
+    // إعادة تحميل الصفحة تلقائياً بعد ثانيتين
+    setTimeout(function() {
+        window.location.reload();
+    }, 2000);
+});
+
+// رسالة عند انقطاع الاتصال
+window.addEventListener('offline', function() {
+    alert('⚠️ تم فقدان الاتصال بالإنترنت');
+});
+</script>
+{% endblock %}

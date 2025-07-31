@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Checker - فحص جاهزية التطبيق</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e40af;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .check-item.success {
+            background: #ecfdf5;
+            border-left: 4px solid #10b981;
+        }
+
+        .check-item.error {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+
+        .check-item.warning {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .icon {
+            margin-left: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .message {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .details {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .actions {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            margin: 0.5rem;
+            background: #1e40af;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #1e3a8a;
+            transform: translateY(-2px);
+        }
+
+        .score {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .score-circle {
+            display: inline-block;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin: 1rem;
+        }
+
+        .score-excellent { background: #10b981; }
+        .score-good { background: #f59e0b; }
+        .score-poor { background: #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔍 فحص جاهزية PWA</h1>
+    
+    <div class="score">
+        <div id="scoreCircle" class="score-circle">
+            <span id="scoreText">0%</span>
+        </div>
+        <div id="scoreLabel">جاري الفحص...</div>
+    </div>
+
+    <div id="checkResults">
+        <!-- سيتم ملء النتائج هنا -->
+    </div>
+
+    <div class="actions">
+        <a href="https://www.pwabuilder.com/" target="_blank" class="btn">
+            🚀 إنشاء APK بـ PWA Builder
+        </a>
+        <a href="#" id="downloadReport" class="btn">
+            📄 تحميل التقرير
+        </a>
+        <a href="/" class="btn">
+            🏠 العودة للرئيسية
+        </a>
+    </div>
+</div>
+
+<script>
+let score = 0;
+let totalChecks = 0;
+let checks = [];
+
+function addCheck(status, message, details) {
+    totalChecks++;
+    if (status === 'success') score++;
+    
+    checks.push({
+        status: status,
+        message: message,
+        details: details
+    });
+    
+    const resultsDiv = document.getElementById('checkResults');
+    const checkDiv = document.createElement('div');
+    checkDiv.className = `check-item ${status}`;
+    
+    const icon = status === 'success' ? '✅' : status === 'error' ? '❌' : '⚠️';
+    
+    checkDiv.innerHTML = `
+        <span class="icon">${icon}</span>
+        <div>
+            <div class="message">${message}</div>
+            ${details ? `<div class="details">${details}</div>` : ''}
+        </div>
+    `;
+    
+    resultsDiv.appendChild(checkDiv);
+    
+    updateScore();
+}
+
+function updateScore() {
+    const percentage = Math.round((score / totalChecks) * 100);
+    const scoreCircle = document.getElementById('scoreCircle');
+    const scoreText = document.getElementById('scoreText');
+    const scoreLabel = document.getElementById('scoreLabel');
+    
+    scoreText.textContent = percentage + '%';
+    
+    if (percentage >= 80) {
+        scoreCircle.className = 'score-circle score-excellent';
+        scoreLabel.textContent = 'ممتاز! جاهز لإنشاء APK';
+    } else if (percentage >= 60) {
+        scoreCircle.className = 'score-circle score-good';
+        scoreLabel.textContent = 'جيد! بعض التحسينات مطلوبة';
+    } else {
+        scoreCircle.className = 'score-circle score-poor';
+        scoreLabel.textContent = 'يحتاج تحسينات كثيرة';
+    }
+}
+
+function runChecks() {
+    // فحص Manifest
+    fetch('/static/manifest.json')
+        .then(response => {
+            if (response.ok) {
+                addCheck('success', 'ملف Manifest موجود', 'تم العثور على manifest.json');
+                return response.json();
+            } else {
+                addCheck('error', 'ملف Manifest مفقود', 'لم يتم العثور على manifest.json');
+                return null;
+            }
+        })
+        .then(manifest => {
+            if (manifest) {
+                // فحص محتويات Manifest
+                if (manifest.name) {
+                    addCheck('success', 'اسم التطبيق محدد', `الاسم: ${manifest.name}`);
+                } else {
+                    addCheck('error', 'اسم التطبيق مفقود', 'يجب تحديد اسم التطبيق في manifest.json');
+                }
+                
+                if (manifest.icons && manifest.icons.length > 0) {
+                    addCheck('success', 'الأيقونات موجودة', `عدد الأيقونات: ${manifest.icons.length}`);
+                } else {
+                    addCheck('error', 'الأيقونات مفقودة', 'يجب إضافة أيقونات بأحجام مختلفة');
+                }
+                
+                if (manifest.start_url) {
+                    addCheck('success', 'رابط البداية محدد', `البداية: ${manifest.start_url}`);
+                } else {
+                    addCheck('warning', 'رابط البداية مفقود', 'يُنصح بتحديد start_url');
+                }
+                
+                if (manifest.display === 'standalone' || manifest.display === 'fullscreen') {
+                    addCheck('success', 'وضع العرض مناسب', `الوضع: ${manifest.display}`);
+                } else {
+                    addCheck('warning', 'وضع العرض غير محسن', 'يُنصح باستخدام standalone');
+                }
+                
+                if (manifest.theme_color) {
+                    addCheck('success', 'لون الثيم محدد', `اللون: ${manifest.theme_color}`);
+                } else {
+                    addCheck('warning', 'لون الثيم مفقود', 'يُنصح بتحديد theme_color');
+                }
+            }
+        })
+        .catch(() => {
+            addCheck('error', 'خطأ في تحميل Manifest', 'تأكد من صحة ملف manifest.json');
+        });
+
+    // فحص Service Worker
+    if ('serviceWorker' in navigator) {
+        fetch('/static/sw.js')
+            .then(response => {
+                if (response.ok) {
+                    addCheck('success', 'Service Worker موجود', 'تم العثور على sw.js');
+                } else {
+                    addCheck('error', 'Service Worker مفقود', 'لم يتم العثور على sw.js');
+                }
+            })
+            .catch(() => {
+                addCheck('error', 'خطأ في تحميل Service Worker', 'تأكد من وجود sw.js');
+            });
+    } else {
+        addCheck('error', 'Service Worker غير مدعوم', 'المتصفح لا يدعم Service Workers');
+    }
+
+    // فحص HTTPS
+    if (location.protocol === 'https:') {
+        addCheck('success', 'HTTPS مفعل', 'الموقع يستخدم اتصال آمن');
+    } else {
+        addCheck('warning', 'HTTPS غير مفعل', 'HTTPS مطلوب للنشر النهائي');
+    }
+
+    // فحص التجاوب
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (viewport) {
+        addCheck('success', 'التجاوب مُعد بشكل صحيح', 'viewport meta tag موجود');
+    } else {
+        addCheck('error', 'إعدادات التجاوب مفقودة', 'viewport meta tag مطلوب');
+    }
+
+    // فحص الخطوط
+    const arabicFont = document.querySelector('link[href*="Cairo"]') || 
+                      document.querySelector('link[href*="arabic"]') ||
+                      getComputedStyle(document.body).fontFamily.includes('Cairo');
+    if (arabicFont) {
+        addCheck('success', 'الخط العربي محسن', 'تم العثور على خط عربي مناسب');
+    } else {
+        addCheck('warning', 'الخط العربي غير محسن', 'يُنصح باستخدام خط عربي جيد');
+    }
+
+    // فحص الأداء
+    setTimeout(() => {
+        const loadTime = performance.now();
+        if (loadTime < 3000) {
+            addCheck('success', 'سرعة التحميل ممتازة', `وقت التحميل: ${Math.round(loadTime)}ms`);
+        } else if (loadTime < 5000) {
+            addCheck('warning', 'سرعة التحميل جيدة', `وقت التحميل: ${Math.round(loadTime)}ms`);
+        } else {
+            addCheck('error', 'سرعة التحميل بطيئة', `وقت التحميل: ${Math.round(loadTime)}ms`);
+        }
+    }, 1000);
+}
+
+// تشغيل الفحوصات
+document.addEventListener('DOMContentLoaded', runChecks);
+
+// تحميل التقرير
+document.getElementById('downloadReport').addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    const reportData = {
+        timestamp: new Date().toISOString(),
+        score: Math.round((score / totalChecks) * 100),
+        checks: checks,
+        recommendations: [
+            'تأكد من وجود جميع الأيقونات بالأحجام المطلوبة',
+            'استخدم HTTPS للنشر النهائي',
+            'اختبر التطبيق على أجهزة مختلفة',
+            'حسن سرعة التحميل',
+            'أضف offline functionality'
+        ]
+    };
+    
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pwa-report.json';
+    a.click();
+    URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -10,7 +11,6 @@
             margin: 0;
             padding: 0;
         }
-
         .container {
             max-width: 400px;
             margin: 80px auto;
@@ -21,28 +21,23 @@
             text-align: center;
             color: #fff;
         }
-
         .container img {
             height: 50px;
             margin-bottom: 10px;
         }
-
         h2 {
             margin: 0;
             font-size: 24px;
             color: #ffffff;
         }
-
         h3 {
             margin: 15px 0;
             font-size: 20px;
             color: #ffffff;
         }
-
         form {
             margin-top: 20px;
         }
-
         input[type="text"],
         input[type="email"],
         input[type="password"] {
@@ -55,12 +50,10 @@
             color: #000;
             font-size: 14px;
         }
-
         input:focus {
             outline: none;
             box-shadow: 0 0 5px #0077ff;
         }
-
         button {
             background-color: #0077ff;
             border: none;
@@ -71,11 +64,9 @@
             border-radius: 6px;
             cursor: pointer;
         }
-
         button:hover {
             background-color: #005fd1;
         }
-
         .error {
             background-color: #ffcccc;
             color: #990000;
@@ -83,17 +74,14 @@
             margin-bottom: 15px;
             border-radius: 5px;
         }
-
         .login-link {
             margin-top: 15px;
             font-size: 14px;
         }
-
         .login-link a {
             color: #aad4ff;
             text-decoration: none;
         }
-
         .login-link a:hover {
             text-decoration: underline;
         }
@@ -104,11 +92,9 @@
         <img src="{% static 'logo.png' %}" alt="شعار">
         <h2>اتحاد الصحفيين العراقيين</h2>
         <h3>تسجيل مستخدم جديد</h3>
-
         {% if error %}
             <div class="error">{{ error }}</div>
         {% endif %}
-
         <form method="post">
             {% csrf_token %}
             <input type="text" name="username" placeholder="اسم المستخدم" required>
@@ -116,7 +102,6 @@
             <input type="password" name="password" placeholder="كلمة المرور" required>
             <button type="submit">تسجيل</button>
         </form>
-
         <div class="login-link">
             لديك حساب؟ <a href="{% url 'login' %}">تسجيل الدخول</a>
         </div>

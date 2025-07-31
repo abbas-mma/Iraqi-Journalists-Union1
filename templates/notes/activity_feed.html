@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}سجل النشاطات{% endblock %}
+
+{% block head %}
+<style>
+.activity-item {
+    border-left: 4px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.activity-item.document {
+    border-left-color: #10b981;
+}
+
+.activity-item.news {
+    border-left-color: #f59e0b;
+}
+
+.activity-item.user {
+    border-left-color: #8b5cf6;
+}
+
+.activity-item.system {
+    border-left-color: #ef4444;
+}
+
+.activity-item.auth {
+    border-left-color: #3b82f6;
+}
+
+.activity-item.admin {
+    border-left-color: #f97316;
+}
+
+.activity-item.security {
+    border-left-color: #dc2626;
+}
+
+.activity-item.general {
+    border-left-color: #6b7280;
+}
+
+.filter-tab {
+    transition: all 0.2s ease;
+}
+
+.filter-tab.active {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.filter-tab:hover {
+    background-color: #e5e7eb;
+}
+
+.filter-tab.active:hover {
+    background-color: #2563eb;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.activity-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+.search-filters {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- رأس الصفحة -->
+    <div class="search-filters rounded-lg shadow-md p-6 mb-6">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-white">سجل النشاطات</h1>
+                <p class="text-blue-100 mt-2">تابع جميع النشاطات والتحديثات في النظام</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="refreshActivities()" 
+                        class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    تحديث
+                </button>
+                
+                <button onclick="exportActivities()" 
+                        class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition">
+                    <i class="fas fa-download mr-2"></i>
+                    تصدير
+                </button>
+            </div>
+        </div>
+        
+        <!-- إحصائيات سريعة -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="text-center p-4 bg-white bg-opacity-20 rounded-lg">
+                <div class="text-3xl font-bold text-white">{{ activity_stats.total }}</div>
+                <div class="text-sm text-blue-100">المجموع</div>
+            </div>
+            <div class="text-center p-4 bg-white bg-opacity-20 rounded-lg">
+                <div class="text-3xl font-bold text-white">{{ activity_stats.today }}</div>
+                <div class="text-sm text-blue-100">اليوم</div>
+            </div>
+            <div class="text-center p-4 bg-white bg-opacity-20 rounded-lg">
+                <div class="text-3xl font-bold text-white">{{ activity_stats.this_week }}</div>
+                <div class="text-sm text-blue-100">هذا الأسبوع</div>
+            </div>
+        </div>
+        
+        <!-- فلاتر البحث -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-blue-100 mb-2">نوع النشاط</label>
+                <select id="activity-type-filter" class="w-full p-2 border border-white border-opacity-30 rounded-lg bg-white bg-opacity-20 text-white placeholder-blue-200">
+                    <option value="all" {% if current_type_filter == 'all' %}selected{% endif %}>جميع الأنواع</option>
+                    {% for activity_type in activity_types %}
+                    <option value="{{ activity_type.action_type }}" 
+                            {% if current_type_filter == activity_type.action_type %}selected{% endif %}>
+                        {{ activity_type.action_type|title }} ({{ activity_type.count }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            {% if user_profile.role in 'admin,supervisor' %}
+            <div>
+                <label class="block text-sm font-medium text-blue-100 mb-2">المستخدم</label>
+                <input type="text" id="user-filter" placeholder="اسم المستخدم" 
+                       value="{{ current_user_filter|default:'' }}"
+                       class="w-full p-2 border border-white border-opacity-30 rounded-lg bg-white bg-opacity-20 text-white placeholder-blue-200">
+            </div>
+            {% endif %}
+            
+            <div>
+                <label class="block text-sm font-medium text-blue-100 mb-2">التاريخ</label>
+                <input type="date" id="date-filter" 
+                       value="{{ current_date_filter|default:'' }}"
+                       class="w-full p-2 border border-white border-opacity-30 rounded-lg bg-white bg-opacity-20 text-white">
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <button onclick="applyFilters()" 
+                    class="bg-white text-blue-600 px-6 py-2 rounded-lg hover:bg-blue-50 transition font-medium">
+                <i class="fas fa-filter mr-2"></i>
+                تطبيق الفلاتر
+            </button>
+            <button onclick="clearFilters()" 
+                    class="bg-white bg-opacity-20 text-white px-6 py-2 rounded-lg hover:bg-opacity-30 transition font-medium ml-2">
+                <i class="fas fa-times mr-2"></i>
+                مسح الفلاتر
+            </button>
+        </div>
+    </div>
+
+    <!-- قائمة النشاطات -->
+    <div class="space-y-4" id="activities-list">
+        {% for activity in activities %}
+        <div class="activity-item {{ activity.action_type }} bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
+            
+            <div class="flex items-start gap-4">
+                <!-- صورة المستخدم -->
+                <div class="user-avatar">
+                    {{ activity.user.username.0|upper }}
+                </div>
+                
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-3">
+                            <h3 class="font-semibold text-gray-800">{{ activity.user.username }}</h3>
+                            
+                            <!-- بدج نوع النشاط -->
+                            <span class="activity-badge 
+                                   {% if activity.action_type == 'document' %}bg-green-100 text-green-800
+                                   {% elif activity.action_type == 'news' %}bg-yellow-100 text-yellow-800
+                                   {% elif activity.action_type == 'user' %}bg-purple-100 text-purple-800
+                                   {% elif activity.action_type == 'system' %}bg-red-100 text-red-800
+                                   {% elif activity.action_type == 'auth' %}bg-blue-100 text-blue-800
+                                   {% elif activity.action_type == 'admin' %}bg-orange-100 text-orange-800
+                                   {% elif activity.action_type == 'security' %}bg-red-100 text-red-800
+                                   {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ activity.action_type|title }}
+                            </span>
+                            
+                            {% if activity.is_important %}
+                            <span class="activity-badge bg-red-100 text-red-800">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>مهم
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-sm text-gray-500">
+                            <i class="far fa-clock mr-1"></i>
+                            {{ activity.created_at|date:"Y-m-d H:i:s" }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <span class="font-medium text-blue-600">{{ activity.action }}</span>
+                    </div>
+                    
+                    <p class="text-gray-600 mb-3">{{ activity.description }}</p>
+                    
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                        <div class="flex items-center gap-4">
+                            {% if activity.ip_address %}
+                            <span>
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                {{ activity.ip_address }}
+                            </span>
+                            {% endif %}
+                            
+                            {% if not activity.is_public %}
+                            <span class="text-orange-600">
+                                <i class="fas fa-lock mr-1"></i>
+                                خاص
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <button onclick="viewActivityDetails('{{ activity.id }}')"
+                                    class="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition"
+                                    title="تفاصيل أكثر">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                            
+                            {% if user_profile.role in 'admin,supervisor' and activity.related_object_id %}
+                            <button onclick="viewRelatedObject('{{ activity.related_object_type }}', '{{ activity.related_object_id }}')"
+                                    class="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50 transition"
+                                    title="عرض الكائن المرتبط">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-12">
+            <i class="fas fa-history text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl text-gray-500 mb-2">لا توجد نشاطات</h3>
+            <p class="text-gray-400">لم يتم العثور على أي نشاطات بالفلتر المحدد</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- تحميل المزيد -->
+    {% if activities.count >= 100 %}
+    <div class="text-center mt-8">
+        <button onclick="loadMoreActivities()" 
+                class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-plus mr-2"></i>
+            تحميل المزيد
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- مودال تفاصيل النشاط -->
+<div id="activity-details-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">تفاصيل النشاط</h3>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div id="modal-content">
+            <!-- سيتم تحميل المحتوى هنا -->
+        </div>
+    </div>
+</div>
+
+<script>
+// تطبيق الفلاتر
+function applyFilters() {
+    const type = document.getElementById('activity-type-filter').value;
+    const user = document.getElementById('user-filter')?.value || '';
+    const date = document.getElementById('date-filter').value;
+    
+    let url = new URL(window.location);
+    url.searchParams.set('type', type);
+    if (user) url.searchParams.set('user', user);
+    if (date) url.searchParams.set('date', date);
+    
+    window.location.href = url.toString();
+}
+
+// مسح الفلاتر
+function clearFilters() {
+    window.location.href = window.location.pathname;
+}
+
+// تحديث النشاطات
+function refreshActivities() {
+    location.reload();
+}
+
+// تصدير النشاطات
+function exportActivities() {
+    const url = new URL(window.location);
+    url.pathname = '/activities/export/';
+    window.open(url.toString(), '_blank');
+}
+
+// عرض تفاصيل النشاط
+function viewActivityDetails(activityId) {
+    fetch(`/activities/details/${activityId}/`)
+    .then(response => response.json())
+    .then(data => {
+        const modal = document.getElementById('activity-details-modal');
+        const content = document.getElementById('modal-content');
+        
+        content.innerHTML = `
+            <div class="space-y-4">
+                <div><strong>المستخدم:</strong> ${data.user}</div>
+                <div><strong>العملية:</strong> ${data.action}</div>
+                <div><strong>الوصف:</strong> ${data.description}</div>
+                <div><strong>النوع:</strong> ${data.action_type}</div>
+                <div><strong>التاريخ:</strong> ${data.created_at}</div>
+                ${data.ip_address ? `<div><strong>عنوان IP:</strong> ${data.ip_address}</div>` : ''}
+                ${data.user_agent ? `<div><strong>المتصفح:</strong> ${data.user_agent}</div>` : ''}
+                <div><strong>عام:</strong> ${data.is_public ? 'نعم' : 'لا'}</div>
+            </div>
+        `;
+        
+        modal.classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في تحميل التفاصيل');
+    });
+}
+
+// عرض الكائن المرتبط
+function viewRelatedObject(type, id) {
+    let url = '';
+    if (type === 'Note') {
+        // البحث عن الوثيقة باستخدام ID
+        url = `/search/?q=id:${id}`;
+    } else if (type === 'News') {
+        url = `/news/#news-${id}`;
+    } else if (type === 'User') {
+        url = `/users/${id}/`;
+    }
+    
+    if (url) {
+        window.open(url, '_blank');
+    }
+}
+
+// إغلاق المودال
+function closeModal() {
+    document.getElementById('activity-details-modal').classList.add('hidden');
+}
+
+// تحديث تلقائي كل دقيقتين
+setInterval(() => {
+    fetch('/activities/api/')
+    .then(response => response.json())
+    .then(data => {
+        // يمكن إضافة تحديث ديناميكي للقائمة هنا
+        console.log('تحديث النشاطات:', data.activities.length);
+    })
+    .catch(error => console.error('Error:', error));
+}, 120000); // كل دقيقتين
+
+// إضافة مستمع للضغط على Escape لإغلاق المودال
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+    }
+});
+</script>
+
+{% csrf_token %}
+{% endblock %}

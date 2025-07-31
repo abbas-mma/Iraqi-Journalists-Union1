@@ -26,13 +26,17 @@
 </div>
 
 <!-- ✅ أزرار السجلات والأنشطة -->
-<div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <a href="{% url 'search_log' %}" class="bg-gray-700 text-white px-6 py-3 rounded-xl shadow hover:bg-gray-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-search"></i> سجل البحث</a>
     <a href="{% url 'archive_log' %}" class="bg-indigo-600 text-white px-6 py-3 rounded-xl shadow hover:bg-indigo-800 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-folder"></i> سجل الأرشفة</a>
     <a href="{% url 'login_history' %}" class="bg-green-800 text-white px-6 py-3 rounded-xl shadow hover:bg-green-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-sign-in-alt"></i> سجل الدخول</a>
     <a href="{% url 'role_change_log' %}" class="bg-yellow-700 text-white px-6 py-3 rounded-xl shadow hover:bg-yellow-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-user-cog"></i> تغيير الأدوار</a>
     <a href="{% url 'activity_log' %}" class="bg-red-700 text-white px-6 py-3 rounded-xl shadow hover:bg-red-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-tasks"></i> سجل الأنشطة</a>
     <a href="{% url 'access_log' %}" class="bg-blue-700 text-white px-6 py-3 rounded-xl shadow hover:bg-teal-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-file-alt"></i> سجل الوصول</a>
+    {% if user_profile.role == 'admin' or user_profile.role == 'supervisor' %}
+    <a href="{% url 'audit_dashboard' %}" class="bg-red-800 text-white px-6 py-3 rounded-xl shadow hover:bg-red-900 transition flex items-center justify-center gap-2 font-bold animate-pulse"><i class="fas fa-shield-alt"></i> 🔍 التدقيق المتقدم</a>
+    {% endif %}
+    <a href="{% url 'qr_scanner' %}" class="bg-purple-700 text-white px-6 py-3 rounded-xl shadow hover:bg-purple-900 transition flex items-center justify-center gap-2 font-bold"><i class="fas fa-qrcode"></i> 📱 مسح QR</a>
 </div>
 
 <!-- ✅ إحصائيات -->

@@ -1,12 +1,32 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}اتحاد الصحفيين العراقيين{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="نظام إدارة الوثائق والأخبار لاتحاد الصحفيين العراقيين">
+    <meta name="keywords" content="اتحاد الصحفيين العراقيين, وثائق, أخبار, صحافة">
+    <meta name="author" content="اتحاد الصحفيين العراقيين">
+    <meta name="theme-color" content="#1e40af">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/icon-192x192.png' %}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="اتحاد الصحفيين">
+    <meta name="msapplication-TileImage" content="{% static 'images/icon-144x144.png' %}">
+    <meta name="msapplication-TileColor" content="#1e40af">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{% block og_title %}اتحاد الصحفيين العراقيين{% endblock %}">
+    <meta property="og:description" content="نظام إدارة الوثائق والأخبار">
+    <meta property="og:image" content="{% static 'images/logo.png' %}">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ar_IQ">
 
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -16,16 +36,477 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- الثيمات والتصميم المحسن -->
+    <link rel="stylesheet" href="{% static 'themes.css' %}">
+
+    <!-- Dark Mode CSS -->
+    <link rel="stylesheet" href="{% static 'dark-mode.css' %}">
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <script>
+    // حفظ تفضيل الوضع الليلي في localStorage
+    function toggleDarkMode() {
+        const body = document.getElementById('bodyRoot');
+        body.classList.toggle('dark-mode');
+        if (body.classList.contains('dark-mode')) {
+            localStorage.setItem('darkMode', '1');
+        } else {
+            localStorage.removeItem('darkMode');
+        }
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+        if (localStorage.getItem('darkMode')) {
+            document.getElementById('bodyRoot').classList.add('dark-mode');
+        }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.card-modern').forEach(function(card) {
+        card.classList.add('animate-fadeIn');
+      });
+    });
+    </script>
 
     <style>
         .dropdown:hover .dropdown-menu {
             display: block;
+        }
+        
+        /* تحسينات PWA */
+        .pwa-install-prompt {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+        }
+        
+        /* تحسينات الاستجابة */
+        @media (max-width: 768px) {
+            .mobile-hidden { display: none !important; }
+            .mobile-full { width: 100% !important; }
+            
+            /* تحسين حجم النصوص للهاتف */
+            body { font-size: 14px; }
+            h1 { font-size: 1.5rem; }
+            h2 { font-size: 1.25rem; }
+            h3 { font-size: 1.125rem; }
+            
+            /* تحسين المسافات */
+            .container { padding-left: 1rem; padding-right: 1rem; }
+            
+            /* تحسين الأزرار للمس */
+            button, .btn, a[role="button"] {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 12px 16px;
+            }
+            
+            /* تحسين الجداول */
+            .table-responsive {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* تحسين النماذج */
+            input, select, textarea {
+                font-size: 16px; /* منع التكبير في iOS */
+                min-height: 44px;
+            }
+        }
+        
+        /* تحسينات للشاشات الصغيرة جداً */
+        @media (max-width: 480px) {
+            .text-xs { font-size: 0.75rem; }
+            .text-sm { font-size: 0.875rem; }
+            .grid { gap: 0.5rem; }
+            .p-4 { padding: 0.75rem; }
+            .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+            .py-4 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        }
+        
+        /* تحسين التمرير الأفقي */
+        .horizontal-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+        
+        .horizontal-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .horizontal-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+        
+        .horizontal-scroll::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 2px;
+        }
+        
+        .horizontal-scroll::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* تحسينات إمكانية الوصول */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 📱 تحسينات عامة للتجاوب */
+        .responsive-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .responsive-grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+        
+        .responsive-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .card-responsive {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        .card-responsive:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .btn-responsive {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            font-size: 0.875rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        /* تحسين النماذج */
+        .form-responsive {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+        
+        /* تحسين الجداول */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: right;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .table tr:hover {
+            background: #f9fafb;
+        }
+        
+        /* تحسين الإشعارات */
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            border-color: #a7f3d0;
+            color: #065f46;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            border-color: #bfdbfe;
+            color: #1e40af;
+        }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* ✅ تحسينات إضافية للمكونات المتجاوبة */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 9999;
+            font-size: 14px;
+            max-width: calc(100vw - 40px);
+            word-wrap: break-word;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        @media (max-width: 480px) {
+            .notification {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+                text-align: center;
+            }
+        }
+        
+        .notification.success { background: #10b981; color: white; }
+        .notification.warning { background: #f59e0b; color: white; }
+        .notification.error { background: #ef4444; color: white; }
+        .notification.info { background: #3b82f6; color: white; }
+        
+        /* إخفاء العناصر عند الطباعة */
+        @media print {
+            .no-print, nav, .mobile-menu, .theme-toggle, footer {
+                display: none !important;
+            }
+            
+            .responsive-container {
+                max-width: none !important;
+                padding: 0 !important;
+            }
+            
+            body {
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+        }
+        
+        /* تحسينات للأجهزة اللمسية */
+        .touch-device .hover\:bg-blue-600:hover {
+            background-color: inherit;
+        }
+        
+        .touch-device button, .touch-device .btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        /* تحسينات الأداء */
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* تحسينات إمكانية الوصول */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus visible للوحة المفاتيح */
+        .focus\:outline-none:focus-visible {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
         }
     </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors" id="bodyRoot">
 
+    <!-- مربع البحث السريع (AJAX Quick Search) -->
+    <div id="quick-search-container" style="position:relative;max-width:400px;margin:10px auto 20px auto;">
+      <input type="text" id="quick-search-input" placeholder="بحث سريع عن وثيقة أو خبر..." autocomplete="off" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid #ccc;">
+      <div id="quick-search-results" style="display:none;position:absolute;top:110%;right:0;left:0;z-index:1000;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 2px 8px #0001;"></div>
+    </div>
+    <script>
+    const input = document.getElementById('quick-search-input');
+    const resultsBox = document.getElementById('quick-search-results');
+    let lastQuery = '';
+    input.addEventListener('input', function() {
+      const q = input.value.trim();
+      if (q.length < 2) {
+        resultsBox.style.display = 'none';
+        resultsBox.innerHTML = '';
+        return;
+      }
+      lastQuery = q;
+      fetch('/ajax_quick_search/?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then data => {
+          if (input.value.trim() !== lastQuery) return;
+          if (data.results && data.results.length) {
+            resultsBox.innerHTML = data.results.map(r => `<a href="${r.url}" style="display:block;padding:8px 12px;text-decoration:none;color:#222;border-bottom:1px solid #eee;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'">${r.label}</a>`).join('');
+            resultsBox.style.display = 'block';
+          } else {
+            resultsBox.innerHTML = '<div style="padding:8px 12px;color:#888">لا توجد نتائج</div>';
+            resultsBox.style.display = 'block';
+          }
+        })
+        .catch(() => {
+          resultsBox.innerHTML = '<div style="padding:8px 12px;color:#888">حدث خطأ في البحث</div>';
+          resultsBox.style.display = 'block';
+        });
+    });
+    document.addEventListener('click', function(e) {
+      if (!input.contains(e.target) && !resultsBox.contains(e.target)) {
+        resultsBox.style.display = 'none';
+      }
+    });
+    </script>
+    <!-- زر تبديل الوضع الليلي -->
+    <button onclick="toggleDarkMode()" style="position:fixed;top:10px;left:10px;z-index:9999;background:#222;color:#fff;padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-size:16px;opacity:0.85;">
+        <i class="fa fa-moon"></i> تبديل الوضع الليلي
+    </button>
     <!-- ✅ الشعار في الأعلى -->
     <div class="text-center mt-4 mb-6">
         <img src="{% static 'logo.png' %}" alt="شعار اتحاد الصحفيين العراقيين" class="mx-auto" style="width: 120px;">
@@ -40,39 +521,92 @@
     </div>
     {% endif %}
 
-    <!-- ✅ شريط التنقل -->
-    <nav class="bg-white shadow mb-8 dark:bg-gray-800">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <img src="{% static 'logo.png' %}" alt="الشعار" class="h-10 w-auto ml-3 rounded-full shadow-lg">
-                <span class="text-xl font-bold text-blue-900 dark:text-blue-200">اتحاد الصحفيين العراقيين</span>
-            </div>
-            <div class="flex items-center gap-4">
-                <!-- القائمة المنسدلة -->
-                <div class="relative dropdown">
-                    <button
-                        class="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none">
-                        <i class="fas fa-bars ml-2"></i> القائمة
+    <!-- ✅ شريط التنقل المتجاوب -->
+    <nav class="bg-white shadow mb-4 sm:mb-8 dark:bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-3 sm:py-4">
+                <!-- الشعار والاسم -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <img src="{% static 'logo.png' %}" alt="الشعار" class="h-8 sm:h-10 w-auto ml-2 sm:ml-3 rounded-full shadow-lg">
+                    <span class="text-sm sm:text-xl font-bold text-blue-900 dark:text-blue-200 hidden sm:block">اتحاد الصحفيين العراقيين</span>
+                    <span class="text-xs font-bold text-blue-900 dark:text-blue-200 sm:hidden">اتحاد الصحفيين</span>
+                </div>
+                
+                <!-- أزرار التنقل -->
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <!-- زر الإشعارات -->
+                    <div class="relative">
+                        <a href="{% url 'notifications_center' %}" class="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-gray-700 transition-colors block border border-transparent hover:border-blue-300">
+                            <span class="text-xl text-blue-600 dark:text-blue-400">🔔</span>
+                        </a>
+                        <!-- مؤشر الإشعارات غير المقروءة -->
+                        <div id="notification-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg">
+                            0
+                        </div>
+                    </div>
+                    
+                    <!-- زر إدارة الثيمات -->
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <span class="text-lg">🎨</span>
                     </button>
-                    <div
-                        class="dropdown-menu absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded shadow-lg z-50 hidden">
-                        <a href="{% url 'home' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">🏠 الرئيسية</a>
-                        <a href="{% url 'create_note' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">➕ إنشاء وثيقة</a>
-                        <a href="{% url 'archived_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">🗂 المؤرشفة</a>
-                        <a href="{% url 'expired_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">⏳ المنتهية</a>
-                        <a href="{% url 'activity_log' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">🧾 سجل النشاط</a>
-                        {# <a href="{% url 'notifications' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">🔔 الإشعارات</a> #}
-                        <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">👤 الملف الشخصي</a>
-                        <hr class="my-1 border-gray-200 dark:border-gray-700">
-                        <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600">🚪 تسجيل الخروج</a>
+                    
+                    <!-- زر القائمة المنسدلة -->
+                    <div class="relative dropdown">
+                        <button id="mobile-menu-btn"
+                            class="flex items-center px-3 py-2 sm:px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none transition-colors">
+                            <i class="fas fa-bars ml-1 sm:ml-2 text-sm sm:text-base"></i> 
+                            <span class="text-xs sm:text-sm">القائمة</span>
+                        </button>
+                        <div id="mobile-menu"
+                            class="dropdown-menu absolute right-0 mt-2 w-48 sm:w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 hidden border dark:border-gray-700">
+                            <div class="py-1">
+                                <a href="{% url 'home' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">🏠</span> الرئيسية
+                                </a>
+                                <a href="{% url 'create_note' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">➕</span> إنشاء وثيقة
+                                </a>
+                                <a href="{% url 'archived_notes' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">🗂</span> المؤرشفة
+                                </a>
+                                <a href="{% url 'expired_notes' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">⏳</span> المنتهية
+                                </a>
+                                <a href="{% url 'activity_log' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">🧾</span> سجل النشاط
+                                </a>
+                                <a href="{% url 'notifications_center' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">🔔</span> مركز الإشعارات
+                                </a>
+                                <a href="{% url 'activity_feed' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">📊</span> سجل النشاطات
+                                </a>
+                                <a href="{% url 'qr_scanner' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">📱</span> مسح QR
+                                </a>
+                                <a href="{% url 'audit_dashboard' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">�</span> لوحة التدقيق
+                                </a>
+                                <a href="{% url 'profile' %}" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <span class="text-lg mr-2">👤</span> الملف الشخصي
+                                </a>
+                                <hr class="my-1 border-gray-200 dark:border-gray-700">
+                                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 transition-colors" style="background:none;border:none;width:100%;text-align:right;">
+                                        <span class="text-lg mr-2">🚪</span> تسجيل الخروج
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- ✅ محتوى الصفحة -->
-    <main class="max-w-7xl mx-auto px-4 py-6">
+    <!-- ✅ محتوى الصفحة المتجاوب -->
+    <main class="responsive-container max-w-7xl mx-auto px-4 py-3 sm:py-6">
         {% block content %}
         <!-- يتم حقن محتوى الصفحات الفرعية هنا -->
         {% endblock %}
@@ -102,8 +636,218 @@
             });
         });
     </script>
+    
+    <!-- إضافة إدارة الثيمات والتصميم -->
+    <script src="{% static 'theme-manager.js' %}"></script>
+    
+    <!-- إشعار تثبيت PWA -->
+    <div id="pwa-install-prompt" class="pwa-install-prompt">
+        <div class="flex items-center gap-3">
+            <div>
+                <h4 class="font-bold">تثبيت التطبيق</h4>
+                <p class="text-sm opacity-90">احصل على تجربة أفضل بتثبيت التطبيق</p>
+            </div>
+            <div class="flex gap-2">
+                <button id="pwa-install-btn" class="bg-white text-blue-600 px-3 py-1 rounded font-semibold text-sm">
+                    تثبيت
+                </button>
+                <button id="pwa-dismiss-btn" class="text-white opacity-75 hover:opacity-100">
+                    ✕
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- تسجيل Service Worker -->
+    <script>
+        // تسجيل Service Worker للPWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('{% static "sw.js" %}')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+        
+        // معالج تثبيت PWA
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('pwa-install-prompt').style.display = 'block';
+        });
+        
+        document.getElementById('pwa-install-btn').addEventListener('click', function() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('pwa-install-prompt').style.display = 'none';
+                });
+            }
+        });
+        
+        document.getElementById('pwa-dismiss-btn').addEventListener('click', function() {
+            document.getElementById('pwa-install-prompt').style.display = 'none';
+        });
+        
+        // إشعارات الدفع
+        if ('Notification' in window && 'serviceWorker' in navigator) {
+            if (Notification.permission === 'default') {
+                setTimeout(function() {
+                    if (confirm('هل تريد تلقي إشعارات عند وصول أخبار جديدة؟')) {
+                        Notification.requestPermission();
+                    }
+                }, 5000);
+            }
+        }
+        
+        // تحسينات الأداء
+        // Lazy loading للصور
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy');
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('img[data-src]').forEach(function(img) {
+                imageObserver.observe(img);
+            });
+        }
+        
+        // معالج الاتصال
+        window.addEventListener('online', function() {
+            document.body.classList.remove('offline');
+            showNotification('تم استعادة الاتصال بالإنترنت!', 'success');
+        });
+        
+        window.addEventListener('offline', function() {
+            document.body.classList.add('offline');
+            showNotification('تم فقدان الاتصال بالإنترنت', 'warning');
+        });
+        
+        // دالة عرض الإشعارات
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type} animate-fadeIn`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(function() {
+                notification.remove();
+            }, duration);
+        }
+        
+        // تحسينات الطباعة
+        window.addEventListener('beforeprint', function() {
+            document.body.classList.add('printing');
+        });
+        
+        window.addEventListener('afterprint', function() {
+            document.body.classList.remove('printing');
+        });
+        
+        // إعدادات إمكانية الوصول
+        document.addEventListener('keydown', function(e) {
+            // Alt + T: تغيير الثيم
+            if (e.altKey && e.key === 't') {
+                if (window.themeManager) {
+                    window.themeManager.toggleTheme();
+                }
+            }
+            
+            // Alt + H: العودة للرئيسية
+            if (e.altKey && e.key === 'h') {
+                window.location.href = '/';
+            }
+            
+            // Escape: إغلاق النوافذ المنبثقة
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal, .dropdown-menu').forEach(function(el) {
+                    el.classList.add('hidden');
+                });
+            }
+        });
+        
+        // تحسينات إضافية للجوال
+        function optimizeForMobile() {
+            // إزالة hover effects على الأجهزة اللمسية
+            if ('ontouchstart' in window) {
+                document.body.classList.add('touch-device');
+            }
+            
+            // تحسين الأداء
+            if (window.DeviceMotionEvent) {
+                window.addEventListener('deviceorientation', function() {
+                    // إعادة حساب التخطيط عند تغيير الاتجاه
+                    setTimeout(function() {
+                        window.dispatchEvent(new Event('resize'));
+                    }, 100);
+                });
+            }
+        }
+        
+        optimizeForMobile();
+    </script>
+
+    <!-- ✅ الفوتر المتجاوب -->
+    <footer class="mt-8 sm:mt-12 py-4 sm:py-6 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div class="responsive-container">
+            <div class="text-center">
+                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    &copy; 2025 اتحاد الصحفيين العراقيين - جميع الحقوق محفوظة
+                </p>
+                <div class="flex flex-wrap justify-center gap-2 sm:gap-4 text-xs text-gray-500 dark:text-gray-500">
+                    <span>الإصدار 2.0</span>
+                    <span class="hidden sm:inline">•</span>
+                    <span>متجاوب مع الجوال</span>
+                    <span class="hidden sm:inline">•</span>
+                    <span>PWA متاح</span>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     {% block scripts %}{% endblock %}
+    
+    <!-- تحديث عداد الإشعارات -->
+    <script>
+    function updateNotificationCount() {
+        fetch('/notifications/count/')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('notification-badge');
+            if (data.count > 0) {
+                badge.textContent = data.count > 99 ? '99+' : data.count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        })
+        .catch(error => console.error('Error fetching notification count:', error));
+    }
+    
+    // تحديث العداد عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', updateNotificationCount);
+    
+    // تحديث العداد كل دقيقة
+    setInterval(updateNotificationCount, 60000);
+    </script>
 
 </body>
 </html>

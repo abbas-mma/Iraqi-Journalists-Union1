@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+{% block title %}لوحة التدقيق والأمان{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8">
+    <h1 class="text-4xl font-bold text-center mb-8 text-blue-800">
+        🔍 لوحة التدقيق والأمان المتقدمة
+    </h1>
+    
+    <!-- الإحصائيات السريعة -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="card-modern text-center">
+            <div class="text-3xl font-bold text-blue-600">{{ stats.total_actions_today }}</div>
+            <div class="text-gray-600">عمليات اليوم</div>
+        </div>
+        <div class="card-modern text-center">
+            <div class="text-3xl font-bold text-green-600">{{ stats.active_users_today }}</div>
+            <div class="text-gray-600">مستخدمين نشطين</div>
+        </div>
+        <div class="card-modern text-center">
+            <div class="text-3xl font-bold text-yellow-600">{{ stats.security_alerts_today }}</div>
+            <div class="text-gray-600">تنبيهات أمنية</div>
+        </div>
+        <div class="card-modern text-center">
+            <div class="text-3xl font-bold text-red-600">{{ stats.failed_logins_today }}</div>
+            <div class="text-gray-600">محاولات دخول فاشلة</div>
+        </div>
+    </div>
+    
+    <!-- التبويبات -->
+    <div class="mb-6">
+        <nav class="flex space-x-4 space-x-reverse">
+            <button class="tab-button active" data-tab="audit-logs">سجل التدقيق</button>
+            <button class="tab-button" data-tab="security-alerts">التنبيهات الأمنية</button>
+            <button class="tab-button" data-tab="document-changes">تغييرات الوثائق</button>
+            <button class="tab-button" data-tab="user-activity">نشاط المستخدمين</button>
+            <button class="tab-button" data-tab="reports">التقارير</button>
+        </nav>
+    </div>
+    
+    <!-- محتوى التبويبات -->
+    
+    <!-- سجل التدقيق -->
+    <div id="audit-logs" class="tab-content active">
+        <div class="card-modern">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">📋 سجل التدقيق</h2>
+                <div class="flex gap-2">
+                    <select id="action-filter" class="input-modern w-40">
+                        <option value="">كل العمليات</option>
+                        <option value="LOGIN">تسجيل دخول</option>
+                        <option value="READ">قراءة</option>
+                        <option value="UPDATE">تحديث</option>
+                        <option value="DELETE">حذف</option>
+                        <option value="DOWNLOAD">تحميل</option>
+                    </select>
+                    <input type="date" id="date-filter" class="input-modern">
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>الوقت</th>
+                            <th>المستخدم</th>
+                            <th>العملية</th>
+                            <th>المورد</th>
+                            <th>العنوان</th>
+                            <th>الحالة</th>
+                            <th>الخطورة</th>
+                            <th>التفاصيل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-logs-tbody">
+                        {% for log in audit_logs %}
+                        <tr class="{% if not log.success %}bg-red-50{% endif %}">
+                            <td>{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                                        {{ log.user.username|first|upper }}
+                                    </div>
+                                    {{ log.user.username }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="px-2 py-1 rounded text-xs font-semibold
+                                    {% if log.action == 'LOGIN' %}bg-green-100 text-green-800
+                                    {% elif log.action == 'DELETE' %}bg-red-100 text-red-800
+                                    {% elif log.action == 'UPDATE' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {{ log.get_action_display }}
+                                </span>
+                            </td>
+                            <td>{{ log.resource_type }}</td>
+                            <td>{{ log.ip_address }}</td>
+                            <td>
+                                {% if log.success %}
+                                    <span class="text-green-600">✅ نجح</span>
+                                {% else %}
+                                    <span class="text-red-600">❌ فشل</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="px-2 py-1 rounded text-xs font-semibold
+                                    {% if log.severity == 'CRITICAL' %}bg-red-100 text-red-800
+                                    {% elif log.severity == 'HIGH' %}bg-orange-100 text-orange-800
+                                    {% elif log.severity == 'MEDIUM' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ log.get_severity_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="text-blue-600 hover:underline" onclick="showLogDetails({{ log.id }})">
+                                    عرض
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- التنبيهات الأمنية -->
+    <div id="security-alerts" class="tab-content">
+        <div class="card-modern">
+            <h2 class="text-2xl font-bold mb-4">🚨 التنبيهات الأمنية</h2>
+            
+            <div class="space-y-4">
+                {% for alert in security_alerts %}
+                <div class="border rounded-lg p-4 
+                    {% if alert.risk_level == 'CRITICAL' %}border-red-500 bg-red-50
+                    {% elif alert.risk_level == 'HIGH' %}border-orange-500 bg-orange-50
+                    {% elif alert.risk_level == 'MEDIUM' %}border-yellow-500 bg-yellow-50
+                    {% else %}border-gray-500 bg-gray-50{% endif %}">
+                    
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold mr-2
+                                    {% if alert.risk_level == 'CRITICAL' %}bg-red-200 text-red-800
+                                    {% elif alert.risk_level == 'HIGH' %}bg-orange-200 text-orange-800
+                                    {% elif alert.risk_level == 'MEDIUM' %}bg-yellow-200 text-yellow-800
+                                    {% else %}bg-gray-200 text-gray-800{% endif %}">
+                                    {{ alert.get_risk_level_display }}
+                                </span>
+                                <span class="text-sm text-gray-600">{{ alert.timestamp|timesince }} مضت</span>
+                            </div>
+                            
+                            <h3 class="font-semibold text-lg">{{ alert.get_alert_type_display }}</h3>
+                            <p class="text-gray-700 mb-2">{{ alert.description }}</p>
+                            
+                            <div class="text-sm text-gray-600">
+                                {% if alert.user %}
+                                    <span>المستخدم: {{ alert.user.username }}</span> •
+                                {% endif %}
+                                <span>IP: {{ alert.ip_address }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            {% if not alert.is_resolved %}
+                                <button onclick="resolveAlert({{ alert.id }})" 
+                                        class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                                    حل التنبيه
+                                </button>
+                            {% else %}
+                                <span class="text-green-600 text-sm">✅ تم الحل</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- تغييرات الوثائق -->
+    <div id="document-changes" class="tab-content">
+        <div class="card-modern">
+            <h2 class="text-2xl font-bold mb-4">📄 تغييرات الوثائق</h2>
+            
+            <div class="overflow-x-auto">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>الوقت</th>
+                            <th>الوثيقة</th>
+                            <th>المستخدم</th>
+                            <th>نوع التغيير</th>
+                            <th>الحقل</th>
+                            <th>القيمة القديمة</th>
+                            <th>القيمة الجديدة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for change in document_changes %}
+                        <tr>
+                            <td>{{ change.timestamp|date:"Y-m-d H:i" }}</td>
+                            <td>{{ change.document.title }}</td>
+                            <td>{{ change.user.username }}</td>
+                            <td>
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800">
+                                    {{ change.get_change_type_display }}
+                                </span>
+                            </td>
+                            <td>{{ change.field_name|default:"-" }}</td>
+                            <td class="max-w-32 truncate">{{ change.old_value|default:"-" }}</td>
+                            <td class="max-w-32 truncate">{{ change.new_value|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نشاط المستخدمين -->
+    <div id="user-activity" class="tab-content">
+        <div class="card-modern">
+            <h2 class="text-2xl font-bold mb-4">👥 نشاط المستخدمين</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- أكثر المستخدمين نشاطاً -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">أكثر المستخدمين نشاطاً اليوم</h3>
+                    <div class="space-y-2">
+                        {% for user_stat in top_users %}
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                    {{ user_stat.user__username|first|upper }}
+                                </div>
+                                <span>{{ user_stat.user__username }}</span>
+                            </div>
+                            <span class="font-semibold">{{ user_stat.action_count }} عملية</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- عناوين IP الأكثر نشاطاً -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">عناوين IP الأكثر نشاطاً</h3>
+                    <div class="space-y-2">
+                        {% for ip_stat in top_ips %}
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <span class="font-mono">{{ ip_stat.ip_address }}</span>
+                            <span class="font-semibold">{{ ip_stat.action_count }} عملية</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- التقارير -->
+    <div id="reports" class="tab-content">
+        <div class="card-modern">
+            <h2 class="text-2xl font-bold mb-4">📊 التقارير</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button onclick="generateDailyReport()" class="btn-modern">
+                    📋 تقرير يومي
+                </button>
+                <a href="/audit/report-view/daily/" class="btn-modern" target="_blank">� عرض تقرير يومي</a>
+                <a href="/audit/report-view/weekly/" class="btn-modern" target="_blank">� عرض تقرير أسبوعي</a>
+                <a href="/audit/report-view/monthly/" class="btn-modern" target="_blank">📈 عرض تقرير شهري</a>
+                <a href="/audit/report-view/full/" class="btn-modern" target="_blank">🔒 عرض تقرير أمني شامل</a>
+                <button onclick="exportAuditLog()" class="btn-modern">
+                    💾 تصدير سجل التدقيق
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة منبثقة لتفاصيل السجل -->
+<div id="log-details-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">تفاصيل السجل</h3>
+            <button onclick="closeLogDetails()" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div id="log-details-content"></div>
+    </div>
+</div>
+
+<script>
+// إدارة التبويبات
+document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', function() {
+        // إزالة النشاط من كل التبويبات
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // تفعيل التبويب المحدد
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+    });
+});
+
+// تفاصيل السجل
+function showLogDetails(logId) {
+    fetch(`/audit/log-details/${logId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('log-details-content').innerHTML = `
+                <div class="space-y-3">
+                    <div><strong>الوقت:</strong> ${data.timestamp}</div>
+                    <div><strong>المستخدم:</strong> ${data.user}</div>
+                    <div><strong>العملية:</strong> ${data.action}</div>
+                    <div><strong>الوصف:</strong> ${data.description}</div>
+                    <div><strong>عنوان IP:</strong> ${data.ip_address}</div>
+                    <div><strong>متصفح المستخدم:</strong> ${data.user_agent}</div>
+                    ${data.old_values ? `<div><strong>القيم القديمة:</strong> <pre class="bg-gray-100 p-2 rounded text-sm">${JSON.stringify(data.old_values, null, 2)}</pre></div>` : ''}
+                    ${data.new_values ? `<div><strong>القيم الجديدة:</strong> <pre class="bg-gray-100 p-2 rounded text-sm">${JSON.stringify(data.new_values, null, 2)}</pre></div>` : ''}
+                    ${data.error_message ? `<div><strong>رسالة الخطأ:</strong> <span class="text-red-600">${data.error_message}</span></div>` : ''}
+                </div>
+            `;
+            document.getElementById('log-details-modal').classList.remove('hidden');
+        });
+}
+
+function closeLogDetails() {
+    document.getElementById('log-details-modal').classList.add('hidden');
+}
+
+// حل التنبيه الأمني
+function resolveAlert(alertId) {
+    if (confirm('هل تريد تسجيل هذا التنبيه كمحلول؟')) {
+        fetch(`/audit/resolve-alert/${alertId}/`, {method: 'POST'})
+            .then(() => location.reload());
+    }
+}
+
+// إنتاج التقارير
+function generateDailyReport() {
+    window.open('/audit/reports/daily/', '_blank');
+}
+
+function generateWeeklyReport() {
+    window.open('/audit/reports/weekly/', '_blank');
+}
+
+function generateMonthlyReport() {
+    window.open('/audit/reports/monthly/', '_blank');
+}
+
+function generateUserReport() {
+    const username = prompt('أدخل اسم المستخدم:');
+    if (username) {
+        window.open(`/audit/reports/user/${username}/`, '_blank');
+    }
+}
+
+function generateSecurityReport() {
+    window.open('/audit/reports/security/', '_blank');
+}
+
+function exportAuditLog() {
+    window.open('/audit/export/', '_blank');
+}
+
+// تحديث البيانات كل 30 ثانية
+setInterval(() => {
+    if (document.getElementById('audit-logs').classList.contains('active')) {
+        // تحديث سجل التدقيق
+        fetch('/audit/logs-ajax/')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('audit-logs-tbody').innerHTML = html;
+            });
+    }
+}, 30000);
+</script>
+
+<style>
+.tab-button {
+    @apply px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition;
+}
+
+.tab-button.active {
+    @apply bg-blue-600 text-white;
+}
+
+.tab-content {
+    @apply hidden;
+}
+
+.tab-content.active {
+    @apply block;
+}
+
+.table-modern tbody tr:hover {
+    @apply bg-blue-50;
+}
+</style>
+{% endblock %}

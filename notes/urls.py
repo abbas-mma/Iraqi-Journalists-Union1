@@ -16,6 +16,15 @@ urlpatterns = [
 
     # تفعيل الحساب عبر البريد
     path('activate/<str:token>/', views.activate_account, name='activate_account'),
+    
+    # ✅ مسح QR للجوال
+    path('qr-scanner/', views.qr_scanner, name='qr_scanner'),
+    
+    # ✅ فحص PWA للتطبيق
+    path('pwa-checker/', views.pwa_checker, name='pwa_checker'),
+    
+    # ✅ صفحة أوفلاين للPWA
+    path('offline/', views.offline_page, name='offline'),
 
     # ✅ الوثائق: عرض، تفاصيل، QR، PDF
     path('note/<uuid:token>/', views.note_detail, name='note_detail'),
@@ -24,6 +33,7 @@ urlpatterns = [
 
     # ✅ الوصول عبر QR
     path('qr/<uuid:token>/', views.qr_note_access, name='qr_note_access'),
+    path('ajax_quick_search/', views.ajax_quick_search, name='ajax_quick_search'),
 ]
 
 from .views import (
@@ -33,6 +43,7 @@ from .views import (
 
 urlpatterns += [
     # ✅ إدارة الحساب وتسجيل الدخول
+    path('audit/report-view/<str:report_type>/', views.audit_report_view, name='audit_report_view'),
     path('register/', views.register, name='register'),
     path('no_permission/', views.no_permission, name='no_permission'),
     path('profile/', views.profile, name='profile'),
@@ -45,6 +56,9 @@ urlpatterns += [
 
     # ✅ لوحة الإحصائيات والتحليل
     path('stats/', views.stats_dashboard, name='stats_dashboard'),
+    
+    # 🆕 API للإحصائيات في الوقت الفعلي
+    path('api/stats/realtime/', views.realtime_stats_api, name='realtime_stats_api'),
 
     # ✅ العمليات على الوثائق (أرشفة، حذف، استرجاع)
     path('note/<int:note_id>/archive/', views.archive_note, name='archive_note'),
@@ -65,6 +79,18 @@ urlpatterns += [
     path('role-change-log/', views.role_change_log, name='role_change_log'),
     path('activity-log/', views.activity_log_view, name='activity_log'),
     path('access-log/', views.access_log, name='access_log'),
+    
+    # ✅ نظام التدقيق المتقدم
+    path('audit/', views.audit_dashboard, name='audit_dashboard'),
+    path('audit/log-details/<int:log_id>/', views.audit_log_details, name='audit_log_details'),
+    path('audit/resolve-alert/<int:alert_id>/', views.resolve_security_alert, name='resolve_security_alert'),
+    path('audit/reports/daily/', views.daily_audit_report, name='daily_audit_report'),
+    path('audit/reports/weekly/', views.weekly_audit_report, name='weekly_audit_report'),
+    path('audit/reports/monthly/', views.monthly_audit_report, name='monthly_audit_report'),
+    path('audit/reports/user/<str:username>/', views.user_audit_report, name='user_audit_report'),
+    path('audit/reports/security/', views.security_audit_report, name='security_audit_report'),
+    path('audit/export/', views.export_audit_log, name='export_audit_log'),
+    path('audit/logs-ajax/', views.audit_logs_ajax, name='audit_logs_ajax'),
 
     # ✅ إدارة المستخدمين
     path('user-management/', views.user_management, name='user_management'),
@@ -74,6 +100,19 @@ urlpatterns += [
 
     # ✅ الإشعارات (تمت الإضافة هنا)
     path('notifications/', views.notifications, name='notifications'),
+    
+    # 🆕 مركز الإشعارات المتقدم
+    path('notifications/center/', views.notifications_center, name='notifications_center'),
+    path('notifications/mark-read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('notifications/count/', views.get_unread_notifications_count, name='unread_notifications_count'),
+    
+    # 🆕 سجل النشاطات الشامل
+    path('activities/', views.activity_feed, name='activity_feed'),
+    path('activity-feed/', views.activity_feed, name='activity_feed_alt'),  # مسار بديل
+    path('activities/api/', views.activity_feed_api, name='activity_feed_api'),
+    path('activities/details/<int:activity_id>/', views.activity_details, name='activity_details'),
+    path('activities/export/', views.export_activities, name='export_activities'),
 
     # ✅ استعادة وتغيير كلمة المرور (نظام Django الأساسي)
     # إعادة تعيين كلمة السر

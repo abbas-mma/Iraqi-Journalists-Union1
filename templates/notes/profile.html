@@ -22,7 +22,12 @@
             <li><a href="{% url 'archived_notes' %}" class="hover:text-blue-700">🗄 مؤرشفة</a></li>
             <li><a href="{% url 'expired_notes' %}" class="hover:text-blue-700">⏳ منتهية</a></li>
             <li><a href="{% url 'profile' %}" class="text-blue-700 font-semibold">👤 الملف الشخصي</a></li>
-            <li><a href="{% url 'logout' %}" class="hover:text-red-600">🚪 تسجيل الخروج</a></li>
+            <li>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="hover:text-red-600" style="background:none;border:none;padding:0;cursor:pointer;">🚪 تسجيل الخروج</button>
+                </form>
+            </li>
         </ul>
     </div>
 </nav>

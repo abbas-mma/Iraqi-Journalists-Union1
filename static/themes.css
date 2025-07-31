@@ -1,0 +1,335 @@
+/* ملف الثيمات والتصميم المحسن */
+
+/* الخطوط العربية الجميلة */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
+
+/* متغيرات الألوان للثيمات */
+:root {
+  /* الثيم الفاتح (افتراضي) */
+  --primary-color: #1e40af;
+  --secondary-color: #3b82f6;
+  --accent-color: #06b6d4;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --background-color: #ffffff;
+  --surface-color: #f8fafc;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  
+  /* تدرجات جميلة */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --gradient-error: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  
+  /* الخطوط */
+  --font-primary: 'Cairo', 'Noto Sans Arabic', sans-serif;
+  --font-secondary: 'Amiri', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* الثيم الداكن */
+[data-theme="dark"] {
+  --primary-color: #60a5fa;
+  --secondary-color: #3b82f6;
+  --accent-color: #22d3ee;
+  --success-color: #34d399;
+  --warning-color: #fbbf24;
+  --error-color: #f87171;
+  --background-color: #0f172a;
+  --surface-color: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* الثيم الأزرق الملكي */
+[data-theme="royal"] {
+  --primary-color: #4338ca;
+  --secondary-color: #5b21b6;
+  --accent-color: #7c3aed;
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --error-color: #dc2626;
+  --background-color: #faf9ff;
+  --surface-color: #f3f0ff;
+  --text-primary: #312e81;
+  --text-secondary: #6366f1;
+  --border-color: #e0e7ff;
+}
+
+/* الثيم الأخضر الطبيعي */
+[data-theme="nature"] {
+  --primary-color: #059669;
+  --secondary-color: #10b981;
+  --accent-color: #06b6d4;
+  --success-color: #22c55e;
+  --warning-color: #eab308;
+  --error-color: #ef4444;
+  --background-color: #f0fdf4;
+  --surface-color: #dcfce7;
+  --text-primary: #14532d;
+  --text-secondary: #166534;
+  --border-color: #bbf7d0;
+}
+
+/* تطبيق الثيم العام */
+body {
+  font-family: var(--font-primary);
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  direction: rtl;
+}
+
+/* مكونات الثيم الأساسية */
+.theme-surface {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+.theme-primary {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.theme-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.theme-button:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px var(--shadow-color);
+}
+
+/* الرسوم المتحركة الناعمة */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* تطبيق الرسوم المتحركة */
+.animate-fadeIn { animation: fadeIn 0.6s ease-out; }
+.animate-slideIn { animation: slideIn 0.5s ease-out; }
+.animate-bounce { animation: bounce 1s infinite; }
+.animate-pulse { animation: pulse 2s infinite; }
+.animate-shake { animation: shake 0.5s ease-in-out; }
+
+/* تحسينات للأزرار */
+.btn-modern {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  border-radius: 50px;
+  color: white;
+  font-weight: 600;
+  padding: 12px 30px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.btn-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-modern:hover::before {
+  left: 100%;
+}
+
+.btn-modern:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px var(--shadow-color);
+}
+
+/* تحسينات للبطاقات */
+.card-modern {
+  background: var(--surface-color);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 32px var(--shadow-color);
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+}
+
+.card-modern:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 48px var(--shadow-color);
+}
+
+/* شريط التقدم الحديث */
+.progress-modern {
+  width: 100%;
+  height: 8px;
+  background-color: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-modern .progress-bar {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+/* تحسينات الفورم */
+.input-modern {
+  width: 100%;
+  padding: 16px 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.input-modern:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-color: var(--background-color);
+}
+
+/* الإشعارات الحديثة */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  z-index: 1000;
+  animation: slideIn 0.5s ease-out;
+}
+
+.notification.success { background: var(--gradient-success); }
+.notification.warning { background: var(--gradient-warning); }
+.notification.error { background: var(--gradient-error); }
+
+/* تحسينات للجداول */
+.table-modern {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.table-modern th,
+.table-modern td {
+  padding: 16px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-modern th {
+  background: var(--gradient-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.table-modern tr:hover {
+  background-color: var(--border-color);
+}
+
+/* تحسينات الاستجابة للهواتف */
+@media (max-width: 768px) {
+  .card-modern {
+    padding: 16px;
+    border-radius: 16px;
+  }
+  
+  .btn-modern {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  
+  .input-modern {
+    padding: 12px 16px;
+    font-size: 16px; /* منع الزوم في iOS */
+  }
+  
+  .notification {
+    right: 10px;
+    left: 10px;
+    top: 10px;
+  }
+}
+
+/* تحسينات إمكانية الوصول */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* فوكوس أفضل لإمكانية الوصول */
+*:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* تحسينات للطباعة */
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}

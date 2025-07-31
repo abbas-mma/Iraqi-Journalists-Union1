@@ -7,3 +7,4 @@ qrcode
 pillow 
 weasyprint 
 imagekitio==4.1.0
+python-dotenv

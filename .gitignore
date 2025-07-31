@@ -43,3 +43,12 @@ npm-debug.log
 # Backup and original files
 *.bak
 *.orig
+# ...existing code...
+
+# Capacitor/Android APK build files
+android/
+capacitor.config.ts
+build_apk.bat
+build_apk.sh
+build_apk.md
+__apk_backup__/

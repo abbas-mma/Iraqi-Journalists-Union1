@@ -1,0 +1,21 @@
+/*
+الوضع الليلي (Dark Mode) - يمكن تطويره لاحقاً ليشمل ألوان أكثر
+*/
+body.dark-mode {
+    background: #18191a !important;
+    color: #e4e6eb !important;
+}
+.dark-mode .card, .dark-mode .container, .dark-mode .modal-content {
+    background: #242526 !important;
+    color: #e4e6eb !important;
+}
+.dark-mode .btn, .dark-mode button, .dark-mode input, .dark-mode select, .dark-mode textarea {
+    background: #3a3b3c !important;
+    color: #e4e6eb !important;
+    border-color: #555;
+}
+.dark-mode .navbar, .dark-mode .sidebar {
+    background: #242526 !important;
+}
+.dark-mode a { color: #9ab !important; }
+.dark-mode .table { background: #242526 !important; color: #e4e6eb !important; }

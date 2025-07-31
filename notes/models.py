@@ -143,3 +143,366 @@ class AccessNotification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.access_type} - {self.note.title}"
+
+
+# نظام التدقيق المتقدم
+class AuditLog(models.Model):
+    ACTION_CHOICES = [
+        ('CREATE', 'إنشاء'),
+        ('READ', 'قراءة'),
+        ('UPDATE', 'تحديث'),
+        ('DELETE', 'حذف'),
+        ('LOGIN', 'تسجيل دخول'),
+        ('LOGOUT', 'تسجيل خروج'),
+        ('DOWNLOAD', 'تحميل'),
+        ('SHARE', 'مشاركة'),
+        ('ARCHIVE', 'أرشفة'),
+        ('RESTORE', 'استرجاع'),
+        ('ROLE_CHANGE', 'تغيير صلاحية'),
+        ('PASSWORD_CHANGE', 'تغيير كلمة السر'),
+        ('SETTINGS_CHANGE', 'تغيير إعدادات'),
+    ]
+    
+    SEVERITY_CHOICES = [
+        ('LOW', 'منخفض'),
+        ('MEDIUM', 'متوسط'),
+        ('HIGH', 'عالي'),
+        ('CRITICAL', 'حرج'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='audit_logs')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    resource_type = models.CharField(max_length=50, help_text='نوع المورد (وثيقة، مستخدم، إلخ)')
+    resource_id = models.CharField(max_length=100, blank=True, null=True, help_text='معرف المورد')
+    resource_name = models.CharField(max_length=255, blank=True, null=True, help_text='اسم المورد')
+    description = models.TextField(help_text='وصف مفصل للعملية')
+    old_values = models.JSONField(blank=True, null=True, help_text='القيم القديمة')
+    new_values = models.JSONField(blank=True, null=True, help_text='القيم الجديدة')
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    session_key = models.CharField(max_length=40, blank=True, null=True)
+    severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default='LOW')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    success = models.BooleanField(default=True, help_text='هل نجحت العملية؟')
+    error_message = models.TextField(blank=True, null=True, help_text='رسالة الخطأ إن وجدت')
+    
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['user', '-timestamp']),
+            models.Index(fields=['action', '-timestamp']),
+            models.Index(fields=['resource_type', '-timestamp']),
+            models.Index(fields=['severity', '-timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.get_action_display()} - {self.resource_type} - {self.timestamp}"
+
+
+class DocumentChangeLog(models.Model):
+    """سجل مفصل لتغييرات الوثائق"""
+    CHANGE_TYPES = [
+        ('FIELD_UPDATE', 'تحديث حقل'),
+        ('FILE_UPLOAD', 'رفع ملف'),
+        ('FILE_DELETE', 'حذف ملف'),
+        ('STATUS_CHANGE', 'تغيير حالة'),
+        ('PERMISSION_CHANGE', 'تغيير صلاحية'),
+        ('METADATA_UPDATE', 'تحديث بيانات وصفية'),
+    ]
+    
+    document = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='change_logs')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    change_type = models.CharField(max_length=20, choices=CHANGE_TYPES)
+    field_name = models.CharField(max_length=100, blank=True, null=True, help_text='اسم الحقل المتغير')
+    old_value = models.TextField(blank=True, null=True, help_text='القيمة القديمة')
+    new_value = models.TextField(blank=True, null=True, help_text='القيمة الجديدة')
+    change_reason = models.TextField(blank=True, null=True, help_text='سبب التغيير')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.document.title} - {self.get_change_type_display()} - {self.user.username}"
+
+
+class SecurityAlert(models.Model):
+    """تنبيهات الأمان المتقدمة"""
+    ALERT_TYPES = [
+        ('SUSPICIOUS_LOGIN', 'تسجيل دخول مشبوه'),
+        ('MULTIPLE_FAILED_LOGINS', 'محاولات دخول فاشلة متعددة'),
+        ('UNAUTHORIZED_ACCESS', 'وصول غير مخول'),
+        ('DATA_BREACH_ATTEMPT', 'محاولة اختراق بيانات'),
+        ('UNUSUAL_ACTIVITY', 'نشاط غير عادي'),
+        ('PERMISSION_ESCALATION', 'محاولة رفع صلاحيات'),
+        ('BULK_DOWNLOAD', 'تحميل كمي مشبوه'),
+        ('IP_BLACKLIST', 'IP في القائمة السوداء'),
+    ]
+    
+    RISK_LEVELS = [
+        ('LOW', 'منخفض'),
+        ('MEDIUM', 'متوسط'),
+        ('HIGH', 'عالي'),
+        ('CRITICAL', 'خطر جداً'),
+    ]
+    
+    alert_type = models.CharField(max_length=30, choices=ALERT_TYPES)
+    risk_level = models.CharField(max_length=10, choices=RISK_LEVELS)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField(blank=True, null=True)
+    description = models.TextField(help_text='وصف التنبيه')
+    details = models.JSONField(blank=True, null=True, help_text='تفاصيل إضافية')
+    is_resolved = models.BooleanField(default=False)
+    resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='resolved_alerts')
+    resolved_at = models.DateTimeField(blank=True, null=True)
+    resolution_notes = models.TextField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['alert_type', '-timestamp']),
+            models.Index(fields=['risk_level', '-timestamp']),
+            models.Index(fields=['is_resolved', '-timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_alert_type_display()} - {self.get_risk_level_display()} - {self.timestamp}"
+
+
+# ==========================================
+# 🆕 نماذج مركز الإشعارات المتقدم
+# ==========================================
+
+class Notification(models.Model):
+    """نظام الإشعارات المتقدم"""
+    NOTIFICATION_TYPES = [
+        ('document', 'وثيقة'),
+        ('news', 'خبر'),
+        ('user', 'مستخدم'),
+        ('system', 'نظام'),
+        ('security', 'أمني'),
+        ('reminder', 'تذكير'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=200, verbose_name="العنوان")
+    message = models.TextField(verbose_name="الرسالة")
+    type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='system')
+    is_read = models.BooleanField(default=False, verbose_name="مقروء")
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(blank=True, null=True)
+    
+    # ربط بكائنات أخرى (اختياري)
+    related_object_id = models.PositiveIntegerField(blank=True, null=True)
+    related_object_type = models.CharField(max_length=50, blank=True, null=True)
+    
+    # إعدادات الإشعار
+    is_email_sent = models.BooleanField(default=False, verbose_name="تم إرسال بريد إلكتروني")
+    priority = models.CharField(max_length=10, choices=[
+        ('low', 'منخفض'),
+        ('normal', 'عادي'),
+        ('high', 'عالي'),
+        ('urgent', 'عاجل')
+    ], default='normal')
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['user', 'is_read']),
+            models.Index(fields=['type', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.title} ({'مقروء' if self.is_read else 'جديد'})"
+    
+    def mark_as_read(self):
+        """تحديد الإشعار كمقروء"""
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save()
+
+
+# ==========================================
+# 🆕 نماذج سجل النشاطات الشامل
+# ==========================================
+
+class ActivityFeed(models.Model):
+    """سجل النشاطات الشامل للموقع"""
+    ACTIVITY_TYPES = [
+        ('document', 'وثيقة'),
+        ('news', 'خبر'),
+        ('user', 'مستخدم'),
+        ('system', 'نظام'),
+        ('auth', 'مصادقة'),
+        ('admin', 'إداري'),
+        ('security', 'أمني'),
+        ('general', 'عام'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    action = models.CharField(max_length=100, verbose_name="العملية")
+    description = models.TextField(verbose_name="الوصف")
+    action_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES, default='general')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # معلومات إضافية
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+    
+    # ربط بكائنات أخرى (اختياري)
+    related_object_id = models.PositiveIntegerField(blank=True, null=True)
+    related_object_type = models.CharField(max_length=50, blank=True, null=True)
+    
+    # إعدادات العرض
+    is_public = models.BooleanField(default=True, verbose_name="عام (يظهر للجميع)")
+    is_important = models.BooleanField(default=False, verbose_name="مهم")
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['action_type', '-created_at']),
+            models.Index(fields=['is_public', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.action} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+# ==========================================
+# 🆕 نماذج الإحصائيات المتقدمة
+# ==========================================
+
+class SystemStats(models.Model):
+    """إحصائيات النظام اليومية"""
+    date = models.DateField(unique=True)
+    
+    # إحصائيات الوثائق
+    documents_created = models.IntegerField(default=0)
+    documents_viewed = models.IntegerField(default=0)
+    documents_downloaded = models.IntegerField(default=0)
+    documents_archived = models.IntegerField(default=0)
+    
+    # إحصائيات المستخدمين
+    users_registered = models.IntegerField(default=0)
+    users_active = models.IntegerField(default=0)
+    user_logins = models.IntegerField(default=0)
+    
+    # إحصائيات الأخبار
+    news_created = models.IntegerField(default=0)
+    news_views = models.IntegerField(default=0)
+    news_likes = models.IntegerField(default=0)
+    news_comments = models.IntegerField(default=0)
+    
+    # إحصائيات الأمان
+    security_alerts = models.IntegerField(default=0)
+    failed_logins = models.IntegerField(default=0)
+    suspicious_activities = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date']
+        verbose_name = "إحصائيات يومية"
+        verbose_name_plural = "الإحصائيات اليومية"
+    
+    def __str__(self):
+        return f"إحصائيات {self.date}"
+
+
+# ==========================================
+# 🆕 نماذج إدارة الملفات المتقدمة
+# ==========================================
+
+class FileUpload(models.Model):
+    """سجل رفع الملفات"""
+    FILE_TYPES = [
+        ('document', 'وثيقة'),
+        ('image', 'صورة'),
+        ('pdf', 'PDF'),
+        ('office', 'ملف مكتبي'),
+        ('other', 'أخرى'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    original_name = models.CharField(max_length=255)
+    file_path = models.CharField(max_length=500)
+    file_size = models.BigIntegerField(help_text="حجم الملف بالبايت")
+    file_type = models.CharField(max_length=20, choices=FILE_TYPES)
+    mime_type = models.CharField(max_length=100)
+    
+    # معلومات الأمان
+    is_safe = models.BooleanField(default=True)
+    virus_scan_result = models.CharField(max_length=50, blank=True, null=True)
+    
+    # إحصائيات
+    download_count = models.IntegerField(default=0)
+    last_accessed = models.DateTimeField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.original_name} - {self.user.username}"
+
+
+# ==========================================
+# 🆕 إشارات Django للإشعارات التلقائية
+# ==========================================
+
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Note)
+def create_note_notification(sender, instance, created, **kwargs):
+    """إنشاء إشعار عند إنشاء وثيقة جديدة"""
+    if created:
+        # إشعار للمستخدم المحدد إذا كانت الوثيقة موجهة له
+        if instance.file_for_user and instance.file_for_user != instance.created_by:
+            Notification.objects.create(
+                user=instance.file_for_user,
+                title="وثيقة جديدة موجهة لك",
+                message=f"تم إنشاء وثيقة جديدة بعنوان '{instance.title}' وموجهة لك",
+                type='document'
+            )
+        
+        # تسجيل النشاط
+        ActivityFeed.objects.create(
+            user=instance.created_by,
+            action="إنشاء وثيقة",
+            description=f"تم إنشاء وثيقة جديدة بعنوان: {instance.title}",
+            action_type='document',
+            is_public=True
+        )
+
+@receiver(post_save, sender=User)
+def create_user_notification(sender, instance, created, **kwargs):
+    """إنشاء إشعار عند تسجيل مستخدم جديد"""
+    if created:
+        # إشعار للمشرفين
+        supervisors = User.objects.filter(profile__role__in=['admin', 'supervisor'])
+        for supervisor in supervisors:
+            Notification.objects.create(
+                user=supervisor,
+                title="مستخدم جديد",
+                message=f"انضم مستخدم جديد: {instance.username}",
+                type='user'
+            )
+        
+        # تسجيل النشاط
+        ActivityFeed.objects.create(
+            user=instance,
+            action="تسجيل مستخدم جديد",
+            description=f"انضم مستخدم جديد: {instance.username}",
+            action_type='user',
+            is_public=False
+        )

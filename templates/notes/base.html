@@ -58,11 +58,26 @@
     <!-- ✅ شريط التنقل -->
     <nav class="bg-white shadow mb-8 dark:bg-gray-800">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <!-- زر تبديل الوضع الليلي -->
+            <button id="toggle-dark-mode-global" class="ml-2 px-3 py-2 rounded-lg border border-gray-300 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="تبديل الوضع الليلي">
+                <span id="dark-mode-icon-global">🌙</span>
+            </button>
             <div class="flex items-center space-x-4">
                 <img src="{% static 'logo.png' %}" alt="الشعار" class="h-10 w-auto ml-3 rounded-full shadow-lg">
                 <span class="text-xl font-bold text-blue-900 dark:text-blue-200">اتحاد الصحفيين العراقيين</span>
             </div>
             <div class="flex items-center gap-4">
+                <!-- زر الإشعارات -->
+                <div class="relative">
+                    <a href="{% url 'notifications_center' %}" class="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-gray-700 transition-colors block border border-transparent hover:border-blue-300">
+                        <span class="text-xl text-blue-600 dark:text-blue-400">🔔</span>
+                    </a>
+                    <!-- مؤشر الإشعارات غير المقروءة -->
+                    <div id="notification-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-lg">
+                        0
+                    </div>
+                </div>
+                
                 <!-- القائمة المنسدلة -->
                 <div class="relative dropdown">
                     <button
@@ -76,10 +91,14 @@
                         <a href="{% url 'archived_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">🗂 المؤرشفة</a>
                         <a href="{% url 'expired_notes' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">⏳ المنتهية</a>
                         <a href="{% url 'activity_log' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">🧾 سجل النشاط</a>
-                        {# <a href="{% url 'notifications' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">🔔 الإشعارات</a> #}
+                        <a href="{% url 'notifications_center' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">🔔 مركز الإشعارات</a>
+                        <a href="{% url 'activity_feed' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">📊 سجل النشاطات</a>
                         <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700">👤 الملف الشخصي</a>
                         <hr class="my-1 border-gray-200 dark:border-gray-700">
-                        <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600">🚪 تسجيل الخروج</a>
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600" style="background:none;border:none;width:100%;text-align:right;">🚪 تسجيل الخروج</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -118,7 +137,49 @@
         });
     </script>
 
+    <!-- تحديث عداد الإشعارات -->
+    <script>
+    function updateNotificationCount() {
+        fetch('/notifications/count/')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('notification-badge');
+            if (data.count > 0) {
+                badge.textContent = data.count > 99 ? '99+' : data.count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        })
+        .catch(error => console.error('Error fetching notification count:', error));
+    }
+    
+    // تحديث العداد عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', updateNotificationCount);
+    
+    // تحديث العداد كل دقيقة
+    setInterval(updateNotificationCount, 60000);
+    </script>
+
     {% block scripts %}{% endblock %}
+
+    <!-- جافاسكريبت لتبديل الوضع الليلي وحفظ التفضيل (يعمل على كل الصفحات) -->
+    <script>
+    function setDarkModeGlobal(enabled) {
+        document.body.classList.toggle('dark', enabled);
+        document.getElementById('dark-mode-icon-global').textContent = enabled ? '☀️' : '🌙';
+        localStorage.setItem('darkModeGlobal', enabled ? '1' : '0');
+    }
+    document.getElementById('toggle-dark-mode-global').addEventListener('click', function() {
+        const isDark = document.body.classList.contains('dark');
+        setDarkModeGlobal(!isDark);
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        if (localStorage.getItem('darkModeGlobal') === '1') {
+            setDarkModeGlobal(true);
+        }
+    });
+    </script>
 
 </body>
 </html>

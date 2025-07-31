@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}مركز الإشعارات{% endblock %}
+
+{% block head %}
+<style>
+.notification-item {
+    border-left: 4px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.notification-item.unread {
+    border-left-color: #3b82f6;
+    background-color: #f0f9ff;
+}
+
+.notification-item.document {
+    border-left-color: #10b981;
+}
+
+.notification-item.news {
+    border-left-color: #f59e0b;
+}
+
+.notification-item.user {
+    border-left-color: #8b5cf6;
+}
+
+.notification-item.system {
+    border-left-color: #ef4444;
+}
+
+.notification-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+.filter-tab {
+    transition: all 0.2s ease;
+}
+
+.filter-tab.active {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.filter-tab:hover {
+    background-color: #e5e7eb;
+}
+
+.filter-tab.active:hover {
+    background-color: #2563eb;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- رأس الصفحة -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">مركز الإشعارات</h1>
+                <p class="text-gray-600 mt-2">تابع جميع الإشعارات والتحديثات المهمة</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="markAllAsRead()" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-check-double mr-2"></i>
+                    تحديد الكل كمقروء
+                </button>
+                
+                <button onclick="refreshNotifications()" 
+                        class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    تحديث
+                </button>
+            </div>
+        </div>
+        
+        <!-- إحصائيات سريعة -->
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
+            <div class="text-center p-3 bg-blue-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600">{{ notification_types.all }}</div>
+                <div class="text-sm text-gray-600">المجموع</div>
+            </div>
+            <div class="text-center p-3 bg-red-50 rounded-lg">
+                <div class="text-2xl font-bold text-red-600">{{ notification_types.unread }}</div>
+                <div class="text-sm text-gray-600">غير مقروء</div>
+            </div>
+            <div class="text-center p-3 bg-green-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600">{{ notification_types.document }}</div>
+                <div class="text-sm text-gray-600">وثائق</div>
+            </div>
+            <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                <div class="text-2xl font-bold text-yellow-600">{{ notification_types.news }}</div>
+                <div class="text-sm text-gray-600">أخبار</div>
+            </div>
+            <div class="text-center p-3 bg-purple-50 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600">{{ notification_types.user }}</div>
+                <div class="text-sm text-gray-600">مستخدمين</div>
+            </div>
+            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-gray-600">{{ notification_types.system }}</div>
+                <div class="text-sm text-gray-600">نظام</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- فلاتر الإشعارات -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div class="flex flex-wrap gap-2">
+            <a href="?type=all" 
+               class="filter-tab px-4 py-2 rounded-lg text-sm font-medium {% if current_filter == 'all' %}active{% endif %}">
+                الكل ({{ notification_types.all }})
+            </a>
+            <a href="?type=document" 
+               class="filter-tab px-4 py-2 rounded-lg text-sm font-medium {% if current_filter == 'document' %}active{% endif %}">
+                الوثائق ({{ notification_types.document }})
+            </a>
+            <a href="?type=news" 
+               class="filter-tab px-4 py-2 rounded-lg text-sm font-medium {% if current_filter == 'news' %}active{% endif %}">
+                الأخبار ({{ notification_types.news }})
+            </a>
+            <a href="?type=user" 
+               class="filter-tab px-4 py-2 rounded-lg text-sm font-medium {% if current_filter == 'user' %}active{% endif %}">
+                المستخدمين ({{ notification_types.user }})
+            </a>
+            <a href="?type=system" 
+               class="filter-tab px-4 py-2 rounded-lg text-sm font-medium {% if current_filter == 'system' %}active{% endif %}">
+                النظام ({{ notification_types.system }})
+            </a>
+        </div>
+    </div>
+
+    <!-- قائمة الإشعارات -->
+    <div class="space-y-4" id="notifications-list">
+        {% for notification in notifications %}
+        <div class="notification-item {% if not notification.is_read %}unread{% endif %} {{ notification.type }} bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
+             data-id="{{ notification.id }}">
+            
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <!-- أيقونة حسب النوع -->
+                        {% if notification.type == 'document' %}
+                            <i class="fas fa-file-alt text-green-600 text-lg"></i>
+                        {% elif notification.type == 'news' %}
+                            <i class="fas fa-newspaper text-yellow-600 text-lg"></i>
+                        {% elif notification.type == 'user' %}
+                            <i class="fas fa-user text-purple-600 text-lg"></i>
+                        {% elif notification.type == 'system' %}
+                            <i class="fas fa-cog text-red-600 text-lg"></i>
+                        {% else %}
+                            <i class="fas fa-bell text-blue-600 text-lg"></i>
+                        {% endif %}
+                        
+                        <h3 class="font-semibold text-gray-800 text-lg">{{ notification.title }}</h3>
+                        
+                        <!-- بدج النوع -->
+                        <span class="notification-badge 
+                               {% if notification.type == 'document' %}bg-green-100 text-green-800
+                               {% elif notification.type == 'news' %}bg-yellow-100 text-yellow-800
+                               {% elif notification.type == 'user' %}bg-purple-100 text-purple-800
+                               {% elif notification.type == 'system' %}bg-red-100 text-red-800
+                               {% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ notification.get_type_display }}
+                        </span>
+                        
+                        <!-- بدج غير مقروء -->
+                        {% if not notification.is_read %}
+                        <span class="notification-badge bg-blue-600 text-white">جديد</span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-gray-600 mb-3">{{ notification.message }}</p>
+                    
+                    <div class="flex items-center text-sm text-gray-500">
+                        <i class="far fa-clock mr-1"></i>
+                        <span>{{ notification.created_at|date:"Y-m-d H:i" }}</span>
+                        
+                        {% if notification.read_at %}
+                        <span class="mx-2">•</span>
+                        <i class="fas fa-check-circle mr-1 text-green-500"></i>
+                        <span>قُرئ في {{ notification.read_at|date:"Y-m-d H:i" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="flex gap-2">
+                    {% if not notification.is_read %}
+                    <button onclick="markAsRead({{ notification.id }})"
+                            class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition"
+                            title="تحديد كمقروء">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    {% endif %}
+                    
+                    <button onclick="deleteNotification({{ notification.id }})"
+                            class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition"
+                            title="حذف الإشعار">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-12">
+            <i class="fas fa-bell-slash text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl text-gray-500 mb-2">لا توجد إشعارات</h3>
+            <p class="text-gray-400">لم يتم العثور على أي إشعارات بالفلتر المحدد</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- تحميل المزيد -->
+    {% if notifications.count >= 50 %}
+    <div class="text-center mt-8">
+        <button onclick="loadMoreNotifications()" 
+                class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition">
+            <i class="fas fa-plus mr-2"></i>
+            تحميل المزيد
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// تحديد إشعار كمقروء
+function markAsRead(notificationId) {
+    fetch(`/notifications/mark-read/${notificationId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const item = document.querySelector(`[data-id="${notificationId}"]`);
+            item.classList.remove('unread');
+            const badge = item.querySelector('.notification-badge:contains("جديد")');
+            if (badge) badge.remove();
+            
+            // تحديث العدادات
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// تحديد جميع الإشعارات كمقروءة
+function markAllAsRead() {
+    if (confirm('هل تريد تحديد جميع الإشعارات كمقروءة؟')) {
+        fetch('/notifications/mark-all-read/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
+
+// تحديث الإشعارات
+function refreshNotifications() {
+    location.reload();
+}
+
+// حذف إشعار
+function deleteNotification(notificationId) {
+    if (confirm('هل تريد حذف هذا الإشعار؟')) {
+        // TODO: إضافة endpoint للحذف
+        console.log('حذف إشعار:', notificationId);
+    }
+}
+
+// تحديث تلقائي كل دقيقة
+setInterval(() => {
+    fetch('/notifications/count/')
+    .then(response => response.json())
+    .then(data => {
+        // تحديث عداد الإشعارات في الـ navbar إذا وجد
+        const counter = document.querySelector('#notifications-counter');
+        if (counter && data.count > 0) {
+            counter.textContent = data.count;
+            counter.style.display = 'inline';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}, 60000); // كل دقيقة
+</script>
+
+{% csrf_token %}
+{% endblock %}
