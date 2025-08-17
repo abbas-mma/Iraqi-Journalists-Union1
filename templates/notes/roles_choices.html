@@ -1,12 +1,16 @@
 
+
 <form method="post" action="{% url 'change_user_role' user.id %}" style="display:inline;">
     {% csrf_token %}
     <select name="role" onchange="this.form.submit()" style="padding:2px 8px; border-radius:6px;">
         {% for value, label in user.userprofile.ROLE_CHOICES %}
-            <option value="{{ value }}" {% if user.userprofile.role == value %}selected{% endif %}>{{ label }}</option>
+            {% if value in allowed_roles %}
+                <option value="{{ value }}" {% if user.userprofile.role == value %}selected{% endif %}>{{ label }}</option>
+            {% endif %}
         {% endfor %}
     </select>
 </form>
+
 
 <!-- زر تحويل المستخدم إلى مستخدم عادي (موظف) -->
 {% if user.userprofile.role != 'employee' and user != request.user %}

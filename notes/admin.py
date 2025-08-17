@@ -36,7 +36,8 @@ class NoteAdmin(admin.ModelAdmin):
     readonly_fields = ('access_token', 'copy_token_display', 'created_at')
     fields = (
         'title', 'content', 'doc_type', 'direction', 'importance',
-        'file', 'stamp', 'signature',
+        'file', 'file_for_user', 'file_login_only', 'login_only', 'is_private',
+        'stamp', 'signature',
         'issuer_name', 'recipient_name',
         'tags', 'is_archived', 'expiry_date',
         'copy_token_display', 'created_at'

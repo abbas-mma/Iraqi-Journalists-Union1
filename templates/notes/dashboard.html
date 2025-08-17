@@ -110,7 +110,7 @@
                         {% endfor %}
                     </td>
                     <td class="px-4 py-2 space-x-2 space-x-reverse">
-                        <a href="{% url 'note_detail' note.access_token %}" class="text-blue-700 hover:underline">عرض</a>
+                        <a href="{% url 'download_attachment' note.access_token %}" class="text-blue-700 hover:underline">عرض الوثيقة</a>
                         {% if note.file %}
                         <a href="{{ note.file }}" class="text-green-700 hover:underline" target="_blank">تحميل</a>
                         {% endif %}

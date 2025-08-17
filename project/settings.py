@@ -31,6 +31,10 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'your_email@gmail.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'your_app_password')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+# إعدادات الجلسة لتفعيل "تذكرني"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 يوم
+SESSION_SAVE_EVERY_REQUEST = True
+
 # إعدادات استعادة كلمة المرور عبر البريد
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # يوم واحد
 

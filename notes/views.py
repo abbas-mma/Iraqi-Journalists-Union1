@@ -1,3 +1,45 @@
+# حذف تعليق خبر (للمشرف فقط)
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import user_passes_test
+from .models_news import NewsComment
+
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'profile', None) and u.profile.role in ['admin', 'supervisor'])
+@require_POST
+def delete_news_comment(request, comment_id):
+    comment = NewsComment.objects.filter(id=comment_id).first()
+    if comment:
+        comment.delete()
+        from django.contrib import messages
+        messages.success(request, "تم حذف التعليق بنجاح.")
+    # إعادة التوجيه إلى صفحة الخبر
+    return redirect(request.META.get('HTTP_REFERER', 'news'))
+from django.http import FileResponse, Http404
+# دالة تحميل الملف المرفق بشكل محمي
+from django.contrib.auth.decorators import login_required
+import mimetypes
+
+@login_required
+def download_attachment(request, token):
+    note = get_object_or_404(Note, access_token=token)
+    # تحقق من الصلاحية كما في qr_note_access
+    if note.is_private and note.created_by != request.user:
+        return render(request, 'notes/no_permission.html')
+    if getattr(note, 'file_for_user', None) and note.file_for_user != request.user:
+        return render(request, 'notes/no_permission.html')
+    if not note.file:
+        return render(request, 'notes/no_attachment.html', {'note': note})
+    file_path = note.file.path
+    file_mimetype, _ = mimetypes.guess_type(file_path)
+    try:
+        return FileResponse(open(file_path, 'rb'), content_type=file_mimetype or 'application/octet-stream')
+    except Exception:
+        raise Http404("الملف غير موجود")
+from django.shortcuts import render, get_object_or_404
+from .models_news import News
+
+def news_detail(request, news_id):
+    news = get_object_or_404(News, id=news_id)
+    return render(request, 'notes/news_detail.html', {'news': news})
 from django.contrib.auth.decorators import user_passes_test
 
 @user_passes_test(lambda u: u.is_superuser or getattr(u, 'userprofile', None) and u.userprofile.role in ['admin', 'supervisor'])
@@ -253,21 +295,10 @@ def register(request):
         if not email:
             return render(request, 'notes/register.html', {'error': 'يجب إدخال بريد إلكتروني صحيح'})
 
-        activation_token = str(uuid.uuid4())
-        user = User.objects.create_user(username=username, password=password, email=email, is_active=False)
-        UserProfile.objects.create(user=user, role='viewer')
-        user.profile.activation_token = activation_token
-        user.profile.save()
-
-        activation_link = request.build_absolute_uri(reverse('activate_account', args=[activation_token]))
-        send_mail(
-            'تفعيل حسابك في اتحاد الصحفيين العراقيين',
-            f'مرحباً {username},\n\nيرجى الضغط على الرابط التالي لتفعيل حسابك:\n{activation_link}',
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=True,
-        )
-        return render(request, 'notes/register.html', {'error': 'تم إرسال رسالة تفعيل إلى بريدك الإلكتروني. يرجى التحقق من البريد لتفعيل الحساب.'})
+        user = User.objects.create_user(username=username, password=password, email=email, is_active=True)
+        profile, created = UserProfile.objects.get_or_create(user=user, defaults={'role': 'viewer'})
+        # تفعيل المستخدم مباشرة بدون تحقق من البريد
+        return render(request, 'notes/register.html', {'error': 'تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.'})
 
     return render(request, 'notes/register.html')
 
@@ -406,10 +437,11 @@ def note_detail(request, token):
                 return render(request, 'notes/no_permission.html')
 
     if note.file:
-        qr_data = request.build_absolute_uri(note.file.url)
-        attachment_url = qr_data
+        # توليد رابط محمي للتحميل
+        protected_url = request.build_absolute_uri(reverse('download_attachment', args=[note.access_token]))
+        attachment_url = protected_url
 
-        qr = qrcode.make(qr_data)
+        qr = qrcode.make(protected_url)
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
@@ -441,9 +473,13 @@ def shorten_uuid(uuid_str):
 
 @login_required
 def note_qr_only(request, token):
+    # حماية: يجب أن يكون المستخدم مسجل دخول
+    if not request.user.is_authenticated:
+        from django.shortcuts import redirect
+        return redirect('login')
+
     note = get_object_or_404(Note, access_token=token)
     user_profile = get_user_profile(request)
-
 
     if (user_profile.role == 'viewer' or 
         (note.is_archived and user_profile.role not in ['admin', 'supervisor']) or 
@@ -837,8 +873,42 @@ def user_management(request):
     active_docs = Note.objects.filter(is_archived=False, is_deleted=False).count()
     archived_docs = Note.objects.filter(is_archived=True, is_deleted=False).count()
 
+    # تحديد الصلاحيات المسموحة حسب صلاحية المستخدم الحالي
+    current_user_profile = None
+    try:
+        current_user_profile = request.user.profile
+    except Exception:
+        pass
+    def get_allowed_roles(role):
+        if role == 'admin':
+            return ['admin', 'supervisor', 'employee', 'normal', 'viewer', 'reader']
+        elif role == 'supervisor':
+            return ['employee', 'normal', 'viewer', 'reader']
+        elif role == 'employee':
+            return ['normal', 'viewer', 'reader']
+        else:
+            return ['viewer', 'reader']
+    def get_allowed_roles(current_role, target_role):
+        if current_role == 'admin':
+            return ['admin', 'supervisor', 'employee', 'normal', 'viewer', 'reader']
+        elif current_role == 'supervisor':
+            if target_role in ['admin', 'supervisor']:
+                return []
+            return ['employee', 'normal', 'viewer', 'reader']
+        elif current_role == 'employee':
+            return ['normal', 'viewer', 'reader']
+        else:
+            return ['viewer', 'reader']
+
+    current_role = current_user_profile.role if current_user_profile else 'viewer'
+    users_with_roles = []
+    for user in users:
+        target_role = getattr(user.profile, 'role', 'viewer')
+        allowed_roles = get_allowed_roles(current_role, target_role) if user != request.user else []
+        users_with_roles.append({'user': user, 'allowed_roles': allowed_roles})
+
     return render(request, 'notes/user_management.html', {
-        'users': users,
+        'users_with_roles': users_with_roles,
         'request': request,
         'total_users': total_users,
         'roles_stats': roles_stats,
@@ -863,18 +933,29 @@ import datetime
 @user_passes_test(lambda u: u.is_superuser or u.userprofile.role in ['admin', 'supervisor'])
 @require_POST
 def change_user_role(request, user_id):
-    user = User.objects.get(id=user_id)
-    new_role = request.POST.get('role')
     current_user_profile = get_user_profile(request)
-    target_profile = user.userprofile
+    user = User.objects.get(id=user_id)
+    # تحديد الصلاحيات الممكن تغييرها حسب صلاحية المستخدم الحالي
+    allowed_roles = []
+    if current_user_profile.role == 'admin':
+        allowed_roles = ['admin', 'supervisor', 'employee', 'normal', 'viewer', 'reader']
+    elif current_user_profile.role == 'supervisor':
+        allowed_roles = ['employee', 'normal', 'viewer', 'reader']
+    elif current_user_profile.role == 'employee':
+        allowed_roles = ['normal', 'viewer', 'reader']
+    else:
+        allowed_roles = ['viewer', 'reader']
+
+    new_role = request.POST.get('role')
+    target_profile = user.profile
     old_role = target_profile.role
     # لا يمكن تغيير صلاحية نفسك أو مستخدم أعلى منك
     if user == request.user:
         messages.error(request, "لا يمكنك تغيير صلاحيتك بنفسك.")
     elif current_user_profile.role == 'supervisor' and target_profile.role in ['admin', 'supervisor']:
         messages.error(request, "لا يمكنك تغيير صلاحية مشرف أو مدير النظام.")
-    elif new_role not in ['admin', 'supervisor', 'employee', 'normal', 'viewer', 'reader']:
-        messages.error(request, "صلاحية غير معروفة.")
+    elif new_role not in allowed_roles:
+        messages.error(request, "لا يمكنك تعيين هذه الصلاحية.")
     elif old_role == new_role:
         messages.info(request, "لم يتم تغيير الصلاحية لأنها كما هي.")
     else:
@@ -1053,12 +1134,16 @@ def add_news(request):
         if not title or not content:
             return render(request, 'notes/add_news.html', {'error': 'العنوان والمحتوى مطلوبان'})
 
-        News.objects.create(
+
+        news_obj = News.objects.create(
             title=title,
             content=content,
             image=image,
             created_by=request.user
         )
+
+        # تم تعطيل إرسال إشعار لكل مستخدم عند إنشاء خبر جديد بناءً على طلب المستخدم
+
         return redirect('news')
 
     return render(request, 'notes/add_news.html')

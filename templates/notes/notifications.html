@@ -29,7 +29,7 @@
                         <p class="text-xs text-gray-400">المتصفح: {{ notify.user_agent|truncatechars:80 }}</p>
                         {% endif %}
                     </div>
-                    <a href="{% url 'note_detail' notify.note.access_token %}" class="text-blue-600 hover:underline">عرض الوثيقة</a>
+                    <a href="{% url 'download_attachment' notify.note.access_token %}" class="text-blue-600 hover:underline">عرض الوثيقة</a>
                 </div>
             </li>
             {% endfor %}

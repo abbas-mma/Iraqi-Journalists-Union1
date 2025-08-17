@@ -50,20 +50,26 @@
         </tr>
     </thead>
     <tbody>
-        {% for user in users %}
+        {% for item in users_with_roles %}
         <tr>
-            <td class="px-4 py-2">{{ user.username }}</td>
-            <td class="px-4 py-2">{{ user.email }}</td>
+            <td class="px-4 py-2">{{ item.user.username }}</td>
+            <td class="px-4 py-2">{{ item.user.email }}</td>
             <td class="px-4 py-2">
-                {% if user != request.user %}
-                    {% include "notes/roles_choices.html" with user=user %}
+                {% if item.user != request.user %}
+                    {% if item.allowed_roles %}
+                        {% include "notes/roles_choices.html" with user=item.user allowed_roles=item.allowed_roles %}
+                    {% else %}
+                        <select class="bg-gray-100 text-gray-400 px-2 py-1 rounded" disabled>
+                            <option>لا توجد رتب متاحة للتغيير</option>
+                        </select>
+                    {% endif %}
                 {% else %}
-                    <span class="text-gray-400">{{ user.userprofile.role }}</span>
+                    <span class="text-gray-400">{{ item.user.userprofile.role }}</span>
                 {% endif %}
             </td>
             <td class="px-4 py-2">
-                {% if user != request.user %}
-                <form method="post" action="{% url 'delete_user' user.id %}" style="display:inline;">
+                {% if item.user != request.user %}
+                <form method="post" action="{% url 'delete_user' item.user.id %}" style="display:inline;">
                     {% csrf_token %}
                     <button type="submit" class="text-red-600 hover:underline" onclick="return confirm('هل أنت متأكد من حذف هذا المستخدم؟');">حذف</button>
                 </form>
@@ -78,3 +84,20 @@
     </tbody>
 </table>
 {% endblock %}
+
+{# إضافة زر حذف التعليق في الأخبار للمشرف فقط #}
+{# مثال: في قالب عرض التعليقات في الأخبار (news_detail.html أو news.html)، أضف التالي داخل تكرار التعليقات: #}
+{#
+{% for comment in news.comments.all %}
+  <div class="comment-box">
+    <div class="comment-content">{{ comment.content }}</div>
+    <div class="comment-meta">بقلم: {{ comment.user.username }}</div>
+    {% if request.user.is_superuser or request.user.profile.role == 'admin' or request.user.profile.role == 'supervisor' %}
+      <form method="post" action="{% url 'delete_news_comment' comment.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 hover:underline" onclick="return confirm('هل أنت متأكد من حذف هذا التعليق؟');">حذف التعليق</button>
+      </form>
+    {% endif %}
+  </div>
+{% endfor %}
+#}

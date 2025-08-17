@@ -10,9 +10,11 @@ urlpatterns = [
 
     # ✅ عرض الأخبار - إضافة المسار هنا
     path('news/', views.news_list, name='news'),
+    path('news/<int:news_id>/', views.news_detail, name='news_detail'),
     path('news/<int:news_id>/comment/', views.add_news_comment, name='add_news_comment'),
     path('news/<int:news_id>/like/', views.toggle_news_like, name='toggle_news_like'),
     path('news/<int:news_id>/delete/', views.delete_news, name='delete_news'),
+    path('news/comment/delete/<int:comment_id>/', views.delete_news_comment, name='delete_news_comment'),
 
     # تفعيل الحساب عبر البريد
     path('activate/<str:token>/', views.activate_account, name='activate_account'),
@@ -34,6 +36,8 @@ urlpatterns = [
     # ✅ الوصول عبر QR
     path('qr/<uuid:token>/', views.qr_note_access, name='qr_note_access'),
     path('ajax_quick_search/', views.ajax_quick_search, name='ajax_quick_search'),
+    # تحميل الملف المرفق بشكل محمي
+    path('attachment/<uuid:token>/', views.download_attachment, name='download_attachment'),
 ]
 
 from .views import (

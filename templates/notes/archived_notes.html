@@ -36,7 +36,7 @@
                         <td class="px-4 py-2 note-date">{{ note.created_at|date:"Y-m-d" }}</td>
                         <td class="px-4 py-2 note-type">{{ note.note_type }}</td>
                         <td class="px-4 py-2">
-                            <a href="{% url 'note_detail' note.access_token %}" class="text-blue-600 hover:underline font-semibold">عرض</a>
+                            <a href="{% url 'download_attachment' note.access_token %}" class="text-blue-600 hover:underline font-semibold">عرض الوثيقة</a>
                             {% if note.file %}
                                 | <a href="{{ note.file.url }}" class="text-green-600 hover:underline font-semibold" download>تحميل</a>
                             {% endif %}

@@ -8,7 +8,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     # ✅ تسجيل الدخول والخروج
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    path('accounts/login/', auth_views.LoginView.as_view(template_name='login.html', extra_context={'remember_me': True}), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
     # ✅ روابط تطبيق notes تكون من الجذر

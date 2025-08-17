@@ -1,3 +1,5 @@
+
+
 {% extends "base.html" %}
 {% block title %}آخر أخبار الاتحاد{% endblock %}
 {% block content %}
@@ -29,19 +31,21 @@
     {% endif %}
 
     {% if news_list %}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="flex flex-wrap justify-center gap-8">
         {% for news in news_list %}
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition group">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition group mb-8 w-full md:w-[45%] lg:w-[30%] max-w-md">
             {% if news.image %}
             <div class="overflow-hidden">
-                <img src="{{ news.image.url }}" alt="صورة الخبر" class="w-full h-56 object-cover transform group-hover:scale-105 transition duration-500">
+                <img src="{{ news.image.url }}" alt="صورة الخبر" class="w-full h-auto max-h-[500px] object-contain mx-auto block">
             </div>
             {% endif %}
             <div class="p-6">
                 <h3 class="text-xl font-bold text-blue-700 mb-2">{{ news.title }}</h3>
                 <p class="text-gray-700 mb-4">{{ news.content|truncatechars:120 }}</p>
-                <div class="flex justify-between items-center text-sm text-gray-500 mb-2">
-                    <span><i class="fas fa-user"></i> {{ news.created_by.username }}</span>
+                {% if news.content|length > 120 %}
+                <a href="{% url 'news_detail' news.id %}" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition font-bold">عرض الخبر بالكامل</a>
+                {% endif %}
+                <div class="flex justify-end items-center text-sm text-gray-500 mb-2">
                     <span><i class="fas fa-clock"></i> {{ news.created_at|date:"Y-m-d H:i" }}</span>
                 </div>
                 <div class="flex items-center gap-4 mb-2">
@@ -64,9 +68,18 @@
                         </button>
                         <span class="ml-1 text-pink-700 font-bold">{{ news.likes.count }}</span>
                     </form>
-                    <button onclick="navigator.share ? navigator.share({title: '{{ news.title }}', text: '{{ news.content|truncatechars:120 }}'}) : alert('انسخ الرابط للمشاركة!');" class="bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition font-bold">
+                    <button onclick="shareNews('{{ request.build_absolute_uri|slice:':-1' }}{% url 'news_detail' news.id %}', '{{ news.title }}')" class="bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition font-bold">
                         <i class="fas fa-share-alt"></i> مشاركة
                     </button>
+                    <script>
+                    function shareNews(url, title) {
+                        if (navigator.share) {
+                            navigator.share({title: title, url: url});
+                        } else {
+                            window.prompt('انسخ رابط الخبر وشاركه:', url);
+                        }
+                    }
+                    </script>
                 </div>
                 <div class="border-t pt-3 mt-3">
                     <div class="mb-2 max-h-40 overflow-y-auto">
@@ -76,11 +89,22 @@
                                 {{ comment.user.username|first|upper }}
                             </div>
                             <div class="bg-gray-100 rounded-xl px-3 py-2 flex-1">
-                                <span class="font-semibold text-blue-800">{{ comment.user.username }}</span>
-                                <span class="text-xs text-gray-400 ml-2">{{ comment.created_at|timesince }} مضت</span>
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold text-blue-800">{{ comment.user.username }}</span>
+                                    <span class="text-xs text-gray-400 ml-2">{{ comment.created_at|timesince }} مضت</span>
+                                    {% if request.user.is_superuser or request.user.profile.role == 'admin' or request.user.profile.role == 'supervisor' %}
+                                        <form method="post" action="{% url 'delete_news_comment' comment.id %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="text-red-600 hover:underline text-xs ml-2" title="حذف التعليق" onclick="return confirm('هل أنت متأكد من حذف هذا التعليق؟');">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
                                 <div class="text-gray-800 mt-1">{{ comment.content }}</div>
                             </div>
                         </div>
+<!-- إشعار خبر جديد في قائمة الإشعارات: يجب إضافة منطق في view عند نشر خبر جديد لإرسال إشعار إلى جميع المستخدمين (مثال: Notification.objects.create(...)) -->
                         {% empty %}
                         <div class="text-gray-400 text-sm">لا توجد تعليقات بعد.</div>
                         {% endfor %}

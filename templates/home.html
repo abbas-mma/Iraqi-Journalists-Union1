@@ -328,7 +328,7 @@
                     {% endfor %}
                 </div>
                 <div class="flex flex-wrap gap-2 text-xs">
-                    <a href="{% url 'note_detail' note.access_token %}" class="text-blue-600 dark:text-blue-400 hover:underline">عرض</a>
+                    <a href="{% url 'download_attachment' note.access_token %}" class="text-blue-600 dark:text-blue-400 hover:underline">عرض الوثيقة</a>
                     <a href="{% url 'note_qr_only' note.access_token %}" class="text-blue-600 dark:text-blue-400 hover:underline">QR</a>
                     {% if note.file %}
                         <a href="{{ note.file.url }}" download class="text-green-600 hover:underline">تحميل</a>
@@ -393,7 +393,7 @@
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex justify-center space-x-1 rtl:space-x-reverse">
-                                <a href="{% url 'note_detail' note.access_token %}" class="text-blue-600 hover:text-blue-800 text-xs">عرض</a>
+                                <a href="{% url 'download_attachment' note.access_token %}" class="text-blue-600 hover:text-blue-800 text-xs">عرض الوثيقة</a>
                                 <span class="text-gray-300">|</span>
                                 <a href="{% url 'note_qr_only' note.access_token %}" class="text-blue-600 hover:text-blue-800 text-xs">QR</a>
                                 {% if note.file %}

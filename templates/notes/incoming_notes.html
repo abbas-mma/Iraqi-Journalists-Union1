@@ -24,7 +24,7 @@
                     <td class="px-4 py-2 text-cyan-700">{{ note.sender }}</td>
                     <td class="px-4 py-2 text-cyan-700">{{ note.created_at|date:'Y-m-d' }}</td>
                     <td class="px-4 py-2">
-                        <a href="{% url 'note_detail' note.id %}" class="bg-cyan-500 hover:bg-cyan-700 text-white font-bold py-1 px-4 rounded shadow transition focus:ring-2 focus:ring-cyan-300">عرض</a>
+                        <a href="{% url 'download_attachment' note.access_token %}" class="bg-cyan-500 hover:bg-cyan-700 text-white font-bold py-1 px-4 rounded shadow transition focus:ring-2 focus:ring-cyan-300">عرض الوثيقة</a>
                     </td>
                 </tr>
                 {% endfor %}

@@ -24,7 +24,7 @@
                     <td class="px-4 py-2">{{ note.status }}</td>
                     <td class="px-4 py-2">{{ note.created_at|date:'Y-m-d' }}</td>
                     <td class="px-4 py-2">
-                        <a href="{% url 'note_detail' note.access_token %}" class="text-blue-600 hover:underline">عرض</a>
+                        <a href="{% url 'download_attachment' note.access_token %}" class="text-blue-600 hover:underline">عرض الوثيقة</a>
                     </td>
                 </tr>
                 {% endfor %}
