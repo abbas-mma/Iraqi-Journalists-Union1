@@ -499,7 +499,7 @@ def note_qr_only(request, token):
     show_print = request.GET.get('print') == '1'
 
     if note.file:
-        qr_data = request.build_absolute_uri(note.file.url)
+        qr_data = request.build_absolute_uri(f'/attachment/{note.access_token}/')
         qr = qrcode.make(qr_data)
         buffer = BytesIO()
         qr.save(buffer, format='PNG')
@@ -990,7 +990,7 @@ def note_official_pdf(request, token):
     if user_profile.role not in ['admin', 'supervisor', 'employee']:
         return render(request, 'notes/no_permission.html')
 
-    qr_data = request.build_absolute_uri(note.file.url if note.file else request.path)
+    qr_data = request.build_absolute_uri(f'/attachment/{note.access_token}/' if note.file else request.path)
     qr = qrcode.make(qr_data)
     buffer = BytesIO()
     qr.save(buffer, format='PNG')
